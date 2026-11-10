@@ -1,4 +1,9 @@
-import { AxleType, BrandProfile, WheelPosition } from "../types/tires";
+import {
+  type AxleType,
+  type RetreadStatus,
+  type BrandProfile,
+  type WheelPosition,
+} from "../../types/truck/tires";
 
 /**
  * Aturan Gandar Berdasarkan Dokumen Operasional & SOP
@@ -8,30 +13,30 @@ export const AXLE_RULES: Record<
   {
     name: string;
     intervalKm: number;
-    maxRetreadAllowed: "R0" | "R2";
+    maxRetreadAllowed: RetreadStatus;
     description: string;
   }
 > = {
   steer: {
     name: "Gandar Depan / Kemudi (Steer)",
     intervalKm: 60000,
-    maxRetreadAllowed: "R0", // GOLDEN RULE #1: Wajib Ban Baru, Haram Vulkanisir
+    maxRetreadAllowed: "R1", // Toleransi operasional PT ALN: Diizinkan R0 & R1. Dilarang R2/R3.
     description:
-      "Wajib ban baru (R0) untuk keselamatan setir & stabilitas manuver.",
+      "Toleransi operasional: Diperbolehkan ban baru (R0) atau maksimal 1x vulkanisir (R1). Dilarang R2/R3/AFKIR.",
   },
   drive: {
     name: "Gandar Penggerak (Drive)",
     intervalKm: 25000,
-    maxRetreadAllowed: "R2",
+    maxRetreadAllowed: "R3", // Maksimal 3x vulkanisir (MOM 5-11-2026)
     description:
-      "Gandar kepala penarik beban kontainer. Maksimal 2x vulkanisir.",
+      "Gandar kepala penarik beban kontainer. Maksimal 3x vulkanisir (R3).",
   },
   trailer: {
     name: "Gandar Gandengan (Trailer)",
     intervalKm: 25000,
-    maxRetreadAllowed: "R2",
+    maxRetreadAllowed: "R3", // Maksimal 3x vulkanisir (MOM 5-11-2026)
     description:
-      "Sumbu roda sasis trailer 20ft / 40ft. Maksimal 2x vulkanisir.",
+      "Sumbu roda sasis trailer 20ft / 40ft. Maksimal 3x vulkanisir (R3).",
   },
 };
 
@@ -124,8 +129,8 @@ export function getBrandProfile(brandName: string): BrandProfile {
  * Pemetaan Posisi Roda ke Tipe Gandar
  */
 export function getAxleTypeByPosition(position: WheelPosition): AxleType {
-  if (position === "H1" || position === "H2") return "steer";
-  if (["H3", "H4", "H5", "H6"].includes(position)) return "drive";
+  if (position === "H1" || position === "H2") {return "steer";}
+  if (["H3", "H4", "H5", "H6"].includes(position)) {return "drive";}
   return "trailer";
 }
 

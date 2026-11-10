@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TruckFleetTireItem } from "../data/mockTires";
+import { type TruckFleetTireItem } from "../data/mockTires";
 import {
   CalendarClock,
   AlertTriangle,
@@ -35,7 +35,7 @@ export default function TireAuditScheduleView({
 
   const handleConfirmReschedule = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!targetTruck) return;
+    if (!targetTruck) {return;}
 
     onRescheduleTruck(targetTruck.id, rescheduleReason, rescheduleDate);
     setTargetTruck(null);

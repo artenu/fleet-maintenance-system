@@ -1,24 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  PlusCircle,
   Camera,
   CheckCircle2,
   ShieldAlert,
   ArrowRight,
   Save,
+  BellRing,
+  PlusCircle,
+  UserCheck,
+  Calendar,
   ScanLine,
   ZoomIn,
   X,
+  Search,
+  ChevronDown,
+  Check,
 } from "lucide-react";
-import { TruckFleetTireItem } from "../data/mockTires";
+import { type TruckFleetTireItem } from "../data/mockTires";
 import {
-  ChassisType,
-  RetreadStatus,
-  TireAsset,
-  WheelPosition,
-} from "../types/tires";
+  type ChassisType,
+  type RetreadStatus,
+  type TireAsset,
+  type WheelPosition,
+} from "../types/truck/tires";
+import { mockCurrentSurveyor } from "../types/auth/auth";
+import {
+  mockCentralTruckApiResponse,
+  deriveChassisTypeFromCapacity,
+} from "../data/MockCentralTruckApi";
+import { getOdometerKmByVin } from "../data/MockHinoIotApi";
 
 interface AddNewTruckViewProps {
+  existingTrucks?: TruckFleetTireItem[]; // Daftar truk yang sudah terdaftar di FMS
   onSaveNewTruck: (newTruck: TruckFleetTireItem) => void;
 }
 
@@ -36,16 +49,80 @@ interface TireInputData {
 }
 
 export default function AddNewTruckView({
+  existingTrucks = [],
   onSaveNewTruck,
 }: AddNewTruckViewProps) {
-  // ================= 1. DATA IDENTITAS MASTER TRUK BARU =================
-  const [unitCode, setUnitCode] = useState<string>("TRK-005");
-  const [plateNumber, setPlateNumber] = useState<string>("B 9123 UEK");
-  const [truckBrand, setTruckBrand] = useState<string>("Hino Ranger FG 235 JJ");
-  const [chassisType, setChassisType] = useState<ChassisType>("2_AXLE");
-  const [odometer, setOdometer] = useState<number>(128450);
-  const [driverName, setDriverName] = useState<string>("Samsul Arifin");
-  const [surveyorName, setSurveyorName] = useState<string>("Bambang Sudiro");
+  // 1. Deteksi unit truk baru dari database sebelah yang belum didaftarkan bannya di FMS
+  const pendingNewTrucks = mockCentralTruckApiResponse.filter(
+    (centralTruck) =>
+      !existingTrucks.some(
+        (existing) =>
+          existing.unitCode === centralTruck.unitCode ||
+          existing.plateNumber === centralTruck.plateNumber,
+      ),
+  );
+
+  // Default ke unit baru pertama (Unit 18 - B 9211 BEL) jika ada!
+  const defaultTruck = pendingNewTrucks[0] || mockCentralTruckApiResponse[0];
+
+  // ================= DATA IDENTITAS MASTER TRUK (DARI API) =================
+  const [plateNumber, setPlateNumber] = useState<string>(
+    defaultTruck.plateNumber,
+  );
+  const [unitCode, setUnitCode] = useState<string>(defaultTruck.unitCode);
+  const [chassisCode, setChassisCode] = useState<string>(
+    defaultTruck.currentChassisCode || "CHS-018",
+  );
+  const [truckBrand, setTruckBrand] = useState<string>(
+    `${defaultTruck.brand} ${defaultTruck.type}`,
+  );
+  const [chassisType, setChassisType] = useState<ChassisType>(
+    deriveChassisTypeFromCapacity(defaultTruck.capacity),
+  );
+  // Odometer otomatis di-get dari sensor Hino Connect via VIN!
+  const [odometer, setOdometer] = useState<number>(
+    getOdometerKmByVin(defaultTruck.vin, 76890),
+  );
+  const [driverName, setDriverName] = useState<string>(
+    defaultTruck.defaultDriver,
+  );
+  const [inspectionDate, setInspectionDate] = useState<string>(
+    new Date().toISOString().split("T")[0],
+  );
+
+  // State untuk Searchable Dropdown Nomor Polisi
+  const [isPlateDropdownOpen, setIsPlateDropdownOpen] =
+    useState<boolean>(false);
+  const [plateSearchQuery, setPlateSearchQuery] = useState<string>("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Tutup dropdown otomatis saat klik di luar area
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsPlateDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  // Filter pencarian cerdas (bisa cari plat, unitCode, merk, atau supir)
+  const filteredPending = pendingNewTrucks.filter(
+    (t) =>
+      t.plateNumber.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
+      t.unitCode.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
+      t.brand.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
+      t.defaultDriver.toLowerCase().includes(plateSearchQuery.toLowerCase()),
+  );
+  const filteredAll = mockCentralTruckApiResponse.filter(
+    (t) =>
+      t.plateNumber.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
+      t.unitCode.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
+      t.brand.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
+      t.defaultDriver.toLowerCase().includes(plateSearchQuery.toLowerCase()),
+  );
 
   // Daftar Posisi Roda Sesuai Sasis (14 atau 18 Roda)
   const wheelPositions: WheelPosition[] = [
@@ -72,7 +149,25 @@ export default function AddNewTruckView({
   // Roda yang sedang aktif dicatat surveyor
   const [activeSlot, setActiveSlot] = useState<WheelPosition>("H1");
 
-  // ================= 2. DATA FISIK KESELURUHAN BAN TRUK =================
+  // Handler saat surveyor memilih Nomor Polisi di Dropdown
+  const handleSelectPlateNumber = (selectedPlate: string) => {
+    const target = mockCentralTruckApiResponse.find(
+      (t) => t.plateNumber === selectedPlate,
+    );
+    if (target) {
+      setPlateNumber(target.plateNumber);
+      setUnitCode(target.unitCode);
+      setChassisCode(target.currentChassisCode || `CHS-${target.unitCode}`);
+      setTruckBrand(`${target.brand} ${target.type}`);
+      setChassisType(deriveChassisTypeFromCapacity(target.capacity));
+      setDriverName(target.defaultDriver);
+      // Sinkronkan odometer dari IoT Hino Connect secara real-time via VIN
+      setOdometer(getOdometerKmByVin(target.vin, 76890));
+      setActiveSlot("H1");
+    }
+  };
+
+  // Data input per roda
   const [tiresData, setTiresData] = useState<Record<string, TireInputData>>({
     H1: {
       serialNumber: "BS-2024-9988",
@@ -126,7 +221,7 @@ export default function AddNewTruckView({
     currentDamages = currentDamages.filter((d) => d !== "Normal");
     if (currentDamages.includes(label)) {
       currentDamages = currentDamages.filter((d) => d !== label);
-      if (currentDamages.length === 0) currentDamages = ["Normal"];
+      if (currentDamages.length === 0) {currentDamages = ["Normal"];}
     } else {
       currentDamages.push(label);
     }
@@ -159,22 +254,26 @@ export default function AddNewTruckView({
 
   // Label Deskripsi Roda Sesuai Standar Indonesia
   const getSlotDescription = (pos: WheelPosition) => {
-    if (pos === "H1") return "Gandar 1 Depan • SISI KANAN (SUPIR 🇮🇩)";
-    if (pos === "H2") return "Gandar 1 Depan • SISI KIRI (KERNET / PENUMPANG)";
+    if (pos === "H1") {return "Gandar 1 Depan • SISI KANAN (SUPIR 🇮🇩)";}
+    if (pos === "H2") {return "Gandar 1 Depan • SISI KIRI (KERNET / PENUMPANG)";}
     if (pos === "H3" || pos === "H4")
-      return `Gandar 2 Drive • SISI KANAN (SUPIR 🇮🇩)`;
+      {return `Gandar 2 Drive • SISI KANAN (SUPIR 🇮🇩)`;}
     if (pos === "H5" || pos === "H6")
-      return `Gandar 2 Drive • SISI KIRI (KERNET)`;
-    if (pos === "S1") return "Keranjang Cadangan • BAN SEREP (SPARE)";
+      {return `Gandar 2 Drive • SISI KIRI (KERNET)`;}
+    if (pos === "S1") {return "Keranjang Cadangan • BAN SEREP (SPARE)";}
     return `Sasis Gandengan Trailer • Posisi ${pos}`;
   };
 
   // Validasi Golden Rule #1: Kemudi Steer Wajib R0
   const isSteer = activeSlot === "H1" || activeSlot === "H2";
-  const isSteerViolation = isSteer && currentTireForm.retreadStatus !== "R0";
+  const isSteerViolation =
+    isSteer &&
+    currentTireForm.retreadStatus !== "R0" &&
+    currentTireForm.retreadStatus !== "R1";
 
   // Simpan Truk Baru ke Database Master
   const handleRegisterTruck = () => {
+    const surveyorBadge = `${mockCurrentSurveyor.name} (${mockCurrentSurveyor.nik})`;
     const compiledTires: TireAsset[] = wheelPositions.map((pos, idx) => {
       const data = tiresData[pos] || {
         serialNumber: `SN-${unitCode}-${pos}`,
@@ -199,11 +298,11 @@ export default function AddNewTruckView({
         currentPosition: pos,
         installOdometer: odometer,
         lastInspectionPercent: data.physicalPercent,
-        lastInspectionDate: new Date().toISOString().split("T")[0],
+        lastInspectionDate: inspectionDate,
         treadDepthMm: data.treadDepthMm,
         pressurePsi: data.pressurePsi,
         visualDamages: data.damages,
-        inspectorName: surveyorName,
+        inspectorName: surveyorBadge,
         photoEvidenceUrl: data.photoUrl || undefined,
         actionRecommendation:
           data.physicalPercent < 40 ? "REPLACE_SERVICE" : "KEEP",
@@ -222,23 +321,50 @@ export default function AddNewTruckView({
       lastIotSync: "Baru saja terdaftar di pool",
       auditSchedule: {
         period: "November 2026",
-        lastAuditDate: new Date().toISOString().split("T")[0],
+        lastAuditDate: inspectionDate,
         nextAuditSchedule: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
         status: "COMPLETED",
-        surveyorName,
+        surveyorName: surveyorBadge,
         rescheduledTo: null,
         rescheduleReason: null,
       },
       tires: compiledTires,
     };
-
     onSaveNewTruck(newTruckRecord);
   };
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      {/* ================= BANNER PELACAK UNIT BARU DARI DATABASE PUSAT ================= */}
+      {pendingNewTrucks.length > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-blue-950 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-blue-600 text-white shrink-0 shadow-xs">
+              <BellRing size={16} className="animate-bounce" />
+            </div>
+            <div>
+              <p className="text-xs font-extrabold text-blue-900">
+                Terdeteksi {pendingNewTrucks.length} Unit Truk Baru dari
+                Database Pusat!
+              </p>
+              <p className="text-[11px] text-blue-700">
+                Unit{" "}
+                {pendingNewTrucks
+                  .map((t) => `${t.plateNumber} (${t.brand})`)
+                  .join(", ")}{" "}
+                telah terdaftar di database pengadaan. Silakan pilih unit pada
+                dropdown di bawah untuk inisialisasi bannya.
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-lg bg-blue-100 border border-blue-200 px-2.5 py-1 text-[10px] font-black uppercase text-blue-800">
+            {pendingNewTrucks.length} Butuh Ban
+          </span>
+        </div>
+      )}
+
       {/* ================= 1. HEADER & FORM DATA MASTER TRUK ================= */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -249,15 +375,15 @@ export default function AddNewTruckView({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-black text-slate-900 tracking-tight">
-                  Pendaftaran Unit Truk Baru & Cek Fisik Ban
+                  Update Kondisi Ban & Cek Fisik Roda
                 </h1>
-                <span className="rounded-md bg-red-100 text-red-700 px-2 py-0.5 text-[10px] font-black uppercase">
-                  Data Master Baru
+                <span className="rounded-md bg-blue-100 text-blue-700 px-2 py-0.5 text-[10px] font-black uppercase">
+                  DATA API SEBELAH
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Daftarkan identitas unit truk baru di pool dan catat kondisi
-                riil seluruh ban yang terpasang
+                Pilih nomor polisi unit truk dari database sebelah dan
+                input/update seluruh kondisi ban yang terpasang
               </p>
             </div>
           </div>
@@ -265,32 +391,201 @@ export default function AddNewTruckView({
 
         {/* Input Form Master Truk */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          {/* 1. NOMOR POLISI (DROPDOWN SESUAI MOM 9-11-2026) */}
+          {/* 1. NOMOR POLISI (SEARCHABLE DROPDOWN) */}
+          <div className="sm:col-span-2 relative" ref={dropdownRef}>
+            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Nomor Polisi (Plat Truk)</span>
+              <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <Search size={10} /> Bisa Diketik / Dicari
+              </span>
+            </label>
+
+            {/* Tombol Pemilih (Trigger Button) */}
+            <button
+              type="button"
+              onClick={() => setIsPlateDropdownOpen(!isPlateDropdownOpen)}
+              className="w-full flex items-center justify-between rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left font-bold text-slate-900 shadow-2xs hover:border-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition">
+              <div className="flex items-center gap-2 truncate">
+                <span className="font-black text-slate-900">{plateNumber}</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-xs font-semibold text-slate-600 truncate">
+                  Unit {unitCode} ({truckBrand})
+                </span>
+                {pendingNewTrucks.some(
+                  (t) => t.plateNumber === plateNumber,
+                ) && (
+                  <span className="rounded bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 font-black uppercase shrink-0">
+                    Unit Baru
+                  </span>
+                )}
+              </div>
+              <ChevronDown
+                size={16}
+                className={`text-slate-400 shrink-0 transition-transform ${
+                  isPlateDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Menu Popover Pencarian */}
+            {isPlateDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-40 rounded-2xl border border-slate-200 bg-white shadow-xl p-2 space-y-2 animate-in fade-in zoom-in-95 duration-100">
+                {/* Kotak Input Search */}
+                <div className="relative">
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Ketik plat nomor, unit, merk, atau supir..."
+                    value={plateSearchQuery}
+                    onChange={(e) => setPlateSearchQuery(e.target.value)}
+                    autoFocus
+                    className="w-full pl-8 pr-8 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/10"
+                  />
+                  {plateSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setPlateSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Daftar Opsi Hasil Pencarian */}
+                <div className="max-h-56 overflow-y-auto space-y-1 pr-1 text-xs">
+                  {/* Grup 1: Unit Baru dari API */}
+                  {filteredPending.length > 0 && (
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-blue-700 px-2 py-1 block bg-blue-50/70 rounded-md mb-1">
+                        ✨ Unit Baru Menunggu Registrasi Ban (
+                        {filteredPending.length})
+                      </span>
+                      {filteredPending.map((t) => {
+                        const isSelected = plateNumber === t.plateNumber;
+                        return (
+                          <div
+                            key={t.plateNumber}
+                            onClick={() => {
+                              handleSelectPlateNumber(t.plateNumber);
+                              setIsPlateDropdownOpen(false);
+                              setPlateSearchQuery("");
+                            }}
+                            className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
+                              isSelected
+                                ? "bg-red-50 text-red-700 font-bold"
+                                : "hover:bg-slate-50 text-slate-700"
+                            }`}>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-slate-900">
+                                  {t.plateNumber}
+                                </span>
+                                <span className="text-slate-400">•</span>
+                                <span className="font-semibold text-slate-600">
+                                  Unit {t.unitCode}
+                                </span>
+                                <span className="rounded bg-blue-100 text-blue-800 px-1.5 py-0.5 text-[9px] font-black">
+                                  BUTUH BAN
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                {t.brand} {t.type} • {t.capacity} • Supir:{" "}
+                                {t.defaultDriver}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <Check
+                                size={14}
+                                className="text-red-600 shrink-0"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Grup 2: Semua Unit di Database */}
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-slate-400 px-2 py-1 block mt-1">
+                      🚛 Semua Unit di Database ({filteredAll.length})
+                    </span>
+                    {filteredAll.map((t) => {
+                      const isSelected = plateNumber === t.plateNumber;
+                      return (
+                        <div
+                          key={t.plateNumber}
+                          onClick={() => {
+                            handleSelectPlateNumber(t.plateNumber);
+                            setIsPlateDropdownOpen(false);
+                            setPlateSearchQuery("");
+                          }}
+                          className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
+                            isSelected
+                              ? "bg-red-50 text-red-700 font-bold"
+                              : "hover:bg-slate-50 text-slate-700"
+                          }`}>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-slate-900">
+                                {t.plateNumber}
+                              </span>
+                              <span className="text-slate-400">•</span>
+                              <span className="font-semibold text-slate-600">
+                                Unit {t.unitCode}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              {t.brand} {t.type} • {t.capacity} • Supir:{" "}
+                              {t.defaultDriver}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <Check
+                              size={14}
+                              className="text-red-600 shrink-0"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {filteredPending.length === 0 &&
+                      filteredAll.length === 0 && (
+                        <div className="p-4 text-center text-slate-400 text-xs">
+                          Tidak ada unit truk yang cocok dengan pencarian "
+                          {plateSearchQuery}"
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block font-bold text-slate-700 mb-1">
-              Kode Unit Truk Baru
+              Kode Unit Truk
             </label>
             <input
               type="text"
               value={unitCode}
-              onChange={(e) => setUnitCode(e.target.value.toUpperCase())}
-              placeholder="Contoh: TRK-005"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none uppercase"
-              required
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-600 focus:outline-none cursor-not-allowed uppercase"
             />
           </div>
 
           <div>
             <label className="block font-bold text-slate-700 mb-1">
-              Nomor Polisi (Plat Truk)
+              Kode Sasis (Chassis ID)
             </label>
-            <input
-              type="text"
-              value={plateNumber}
-              onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
-              placeholder="Contoh: B 9123 UEK"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none uppercase"
-              required
-            />
+            <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-blue-700">
+              {chassisCode}
+            </div>
           </div>
 
           <div>
@@ -300,22 +595,28 @@ export default function AddNewTruckView({
             <select
               value={chassisType}
               onChange={(e) => setChassisType(e.target.value as ChassisType)}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 bg-white focus:border-red-500 focus:outline-none">
-              <option value="2_AXLE">2 Sumbu • 14 Ban (Trailer 20ft)</option>
-              <option value="3_AXLE">3 Sumbu • 18 Ban (Trailer 40ft)</option>
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none">
+              <option value="2_AXLE">
+                2 Sumbu • 14 Ban (Trailer 20ft / 40ft Pendek)
+              </option>
+              <option value="3_AXLE">
+                3 Sumbu • 18 Ban (Trailer 40ft Standar)
+              </option>
             </select>
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Odometer Fisik Dashboard (KM)
+            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Odometer Dashboard (KM)</span>
+              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                IoT Hino Connect
+              </span>
             </label>
             <input
               type="number"
               value={odometer}
-              onChange={(e) => setOdometer(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none"
-              required
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-600 focus:outline-none cursor-not-allowed"
             />
           </div>
 
@@ -326,9 +627,8 @@ export default function AddNewTruckView({
             <input
               type="text"
               value={truckBrand}
-              onChange={(e) => setTruckBrand(e.target.value)}
-              placeholder="Contoh: Hino Ranger FG 235 JJ"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-semibold text-slate-900 focus:border-red-500 focus:outline-none"
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-semibold text-slate-600 focus:outline-none cursor-not-allowed"
             />
           </div>
 
@@ -339,23 +639,36 @@ export default function AddNewTruckView({
             <input
               type="text"
               value={driverName}
-              onChange={(e) => setDriverName(e.target.value)}
-              placeholder="Contoh: Samsul Arifin"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-semibold text-slate-900 focus:border-red-500 focus:outline-none"
+              readOnly
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-semibold text-slate-600 focus:outline-none cursor-not-allowed"
             />
           </div>
 
-          <div className="sm:col-span-2">
-            <label className="block font-bold text-slate-700 mb-1">
-              Nama Surveyor PIC (Pemeriksa)
+          <div>
+            <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+              <Calendar size={13} className="text-slate-500" />
+              Tanggal Pengecekan
             </label>
             <input
-              type="text"
-              value={surveyorName}
-              onChange={(e) => setSurveyorName(e.target.value)}
-              placeholder="Contoh: Bambang Sudiro"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-semibold text-slate-900 focus:border-red-500 focus:outline-none"
+              type="date"
+              value={inspectionDate}
+              onChange={(e) => setInspectionDate(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none"
+              required
             />
+          </div>
+
+          <div className="sm:col-span-3">
+            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Surveyor PIC Lapangan</span>
+              <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+                <UserCheck size={11} /> Akun Login Terverifikasi
+              </span>
+            </label>
+            <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs text-slate-800 font-bold truncate">
+              {mockCurrentSurveyor.name} ({mockCurrentSurveyor.nik}) •{" "}
+              {mockCurrentSurveyor.poolLocation}
+            </div>
           </div>
         </div>
       </div>
@@ -532,14 +845,15 @@ export default function AddNewTruckView({
               }
               className="w-full rounded-xl border border-slate-300 px-3 py-2 font-black text-slate-900 bg-white focus:border-red-500 focus:outline-none">
               <option value="R0">R0 • Ban Baru Asli (Casing Baru)</option>
-              <option value="R1">R1 • Vulkanisir ke-1</option>
-              <option value="R2">R2 • Vulkanisir ke-2 (Batas Maksimal)</option>
+              <option value="R1">R1 • Vulkanisir ke-1 (Boleh Steer)</option>
+              <option value="R2">R2 • Vulkanisir ke-2</option>
+              <option value="R3">R3 • Vulkanisir ke-3 (Maksimal)</option>
               <option value="AFKIR">AFKIR • Rusak / Afkir</option>
             </select>
             <span className="text-[10px] text-slate-400 block">
               {isSteer
-                ? "Wajib R0 untuk Posisi Steer"
-                : "Maksimal 2x Vulkanisir"}
+                ? "Steer diizinkan R0 atau R1"
+                : "Maksimal 3x Vulkanisir (R3)"}
             </span>
           </div>
 

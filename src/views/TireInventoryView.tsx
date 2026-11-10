@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { TruckFleetTireItem } from "../data/mockTires";
-import { TireAsset } from "../types/tires";
+import { type TruckFleetTireItem } from "../data/mockTires";
+import { type TireAsset } from "../types/truck/tires";
 import { Warehouse, Search, Filter } from "lucide-react";
 
 interface TireInventoryViewProps {

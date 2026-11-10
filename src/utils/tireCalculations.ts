@@ -3,13 +3,13 @@ import {
   getAxleTypeByPosition,
   getBrandProfile,
   TIRE_THRESHOLDS,
-} from "../constants/tireRules";
+} from "../constants/truck/tireRules";
 import {
-  TireAsset,
-  TireHealthStatus,
-  WheelPosition,
-  WheelSlotEvaluation,
-} from "../types/tires";
+  type TireAsset,
+  type TireHealthStatus,
+  type WheelPosition,
+  type WheelSlotEvaluation,
+} from "../types/truck/tires";
 
 /**
  * Evaluasi Status Kesehatan Satu Slot Roda (Decision Matrix Engine)
@@ -42,10 +42,14 @@ export function evaluateWheelSlot(
 
   const ruleViolations: string[] = [];
 
-  // 1. GOLDEN RULE #1: Gandar Steer (H1 & H2) WAJIB Ban Baru (R0)
-  if (axleType === "steer" && tire.retreadStatus !== "R0") {
+  // 1. ATURAN KEMUDI: Gandar Steer (H1 & H2) diizinkan Ban Baru (R0) atau 1x Vulkanisir (R1)
+  if (
+    axleType === "steer" &&
+    tire.retreadStatus !== "R0" &&
+    tire.retreadStatus !== "R1"
+  ) {
     ruleViolations.push(
-      `PELANGGARAN KESELAMATAN: Posisi ${position} (Steer) wajib menggunakan Ban Baru (R0). Ban saat ini berstatus ${tire.retreadStatus}!`,
+      `PELANGGARAN KESELAMATAN: Posisi ${position} (Steer) hanya diizinkan Ban Baru (R0) atau 1x Vulkanisir (R1). Ban saat ini berstatus ${tire.retreadStatus}!`,
     );
   }
 
@@ -123,7 +127,7 @@ export function calculateCpk(
   purchasePrice: number,
   totalKmAchieved: number,
 ): number {
-  if (!totalKmAchieved || totalKmAchieved <= 0) return 0;
+  if (!totalKmAchieved || totalKmAchieved <= 0) {return 0;}
   return Math.round((purchasePrice / totalKmAchieved) * 100) / 100;
 }
 
@@ -132,7 +136,7 @@ export function calculateCpk(
  * Contoh: 76890035 meter -> 76.890 KM
  */
 export function convertIotOdometerMeterToKm(meterValue: number): number {
-  if (!meterValue || Number.isNaN(meterValue)) return 0;
+  if (!meterValue || Number.isNaN(meterValue)) {return 0;}
   return Math.round(meterValue / 1000);
 }
 

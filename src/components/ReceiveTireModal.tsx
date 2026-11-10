@@ -5,10 +5,12 @@ import {
   Sparkles,
   RefreshCw,
   ShieldAlert,
+  Lock,
   CheckCircle2,
 } from "lucide-react";
-import { RetreadStatus, TireAsset } from "../types/tires";
-import { BRAND_PROFILES } from "../constants/tireRules";
+import { type RetreadStatus, type TireAsset } from "../types/truck/tires";
+import { BRAND_PROFILES } from "../constants/truck/tireRules";
+import { mockCurrentSurveyor } from "../types/auth/auth";
 
 export type ReceiveMode = "NEW_PURCHASE" | "RETREAD_RETURN";
 
@@ -33,18 +35,18 @@ export default function ReceiveTireModal({
   const [vendorName, setVendorName] = useState<string>("Toko Sumber Ban Jaya");
   const [physicalPercent, setPhysicalPercent] = useState<number>(100);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   // Validasi Golden Rule #2: Vulkanisir maks 2x
   let validationError: string | null = null;
   if (mode === "RETREAD_RETURN" && retreadStatus === "R0") {
     validationError =
-      "Penerimaan hasil vulkanisir wajib berstatus R1 (vulkanisir ke-1) atau R2 (vulkanisir ke-2). Status R0 hanya untuk ban baru!";
+      "Penerimaan hasil vulkanisir wajib berstatus R1, R2, atau R3. Status R0 hanya untuk ban baru!";
   }
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!serialNumber.trim() || validationError) return;
+    if (!serialNumber.trim() || validationError) {return;}
 
     const newTire: TireAsset = {
       id: `WH-${Date.now().toString().slice(-4)}`,
@@ -158,7 +160,7 @@ export default function ReceiveTireModal({
                 onChange={(e) => {
                   setBrand(e.target.value);
                   const profile = BRAND_PROFILES[e.target.value];
-                  if (profile) setPrice(profile.standardPrice);
+                  if (profile) {setPrice(profile.standardPrice);}
                 }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20">
                 {Object.keys(BRAND_PROFILES).map((b) => (
@@ -203,8 +205,9 @@ export default function ReceiveTireModal({
                   }
                   className="w-full rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20">
                   <option value="R1">R1 (Vulkanisir ke-1)</option>
-                  <option value="R2">
-                    R2 (Vulkanisir ke-2 - Batas Maksimal)
+                  <option value="R2">R2 (Vulkanisir ke-2)</option>
+                  <option value="R3">
+                    R3 (Vulkanisir ke-3 - Batas Maksimal)
                   </option>
                 </select>
               )}
@@ -233,13 +236,28 @@ export default function ReceiveTireModal({
                   ? "Harga Beli (Rp)"
                   : "Biaya Vulkanisir (Rp)"}
               </label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20"
-                required
-              />
+              {mockCurrentSurveyor.role === "ADMIN" ||
+              mockCurrentSurveyor.role === "FINANCE" ? (
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  required
+                />
+              ) : (
+                <div className="flex items-center gap-2 rounded-xl border border-dashed border-amber-300 bg-amber-50/80 px-3 py-2 text-xs text-amber-900">
+                  <Lock size={15} className="text-amber-600 shrink-0" />
+                  <div>
+                    <span className="font-bold block text-[11px] text-amber-800">
+                      Informasi Harga Terproteksi
+                    </span>
+                    <span className="text-[10px] text-amber-600">
+                      Hanya dapat diakses oleh Finance & Admin
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

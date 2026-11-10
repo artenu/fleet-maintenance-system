@@ -1,20 +1,14 @@
 import { useEffect } from "react";
 import { CheckCircle2, AlertTriangle, Info, X } from "lucide-react";
-
-export interface ToastMessage {
-  id: string;
-  type: "success" | "warning" | "info";
-  title: string;
-  description?: string;
-}
-
-interface ToastProps {
-  toasts: ToastMessage[];
-  onDismiss: (id: string) => void;
-}
+import type {
+  ToastProps,
+  ToastMessage,
+} from "@/types/components/common/commonTypes";
 
 export default function ToastContainer({ toasts, onDismiss }: ToastProps) {
-  if (toasts.length === 0) return null;
+  if (toasts.length === 0) {
+    return null;
+  }
 
   return (
     <div className="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">

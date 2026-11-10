@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ShieldCheck,
+  Link2,
   ChevronDown,
   ChevronRight,
   Clock,
@@ -20,6 +21,7 @@ import {
 export type TireMaintenanceView =
   | "digital-twin"
   | "add-truck"
+  | "coupling"
   | "inventory"
   | "history"
   | "cpk-analytics"
@@ -61,10 +63,17 @@ export default function Sidebar({
     },
     {
       id: "add-truck",
-      label: "Tambah Unit Truk Baru",
+      label: "Update Kondisi Ban",
       icon: PlusCircle,
-      badge: "+ Baru",
-      badgeColor: "bg-red-100 text-red-700 font-bold",
+      badge: "Update",
+      badgeColor: "bg-blue-100 text-blue-700 font-bold",
+    },
+    {
+      id: "coupling" as TireMaintenanceView,
+      label: "Perangkaian Sasis (Coupling)",
+      icon: Link2,
+      badge: "Drop & Hook",
+      badgeColor: "bg-blue-100 text-blue-700 font-bold",
     },
     {
       id: "inventory",
@@ -147,7 +156,7 @@ export default function Sidebar({
             <button
               type="button"
               onClick={() => {
-                if (isCollapsed) onToggleCollapse(); // Buka sidebar otomatis jika sedang ciut
+                if (isCollapsed) {onToggleCollapse();} // Buka sidebar otomatis jika sedang ciut
                 setIsTireMenuOpen((prev) => !prev);
               }}
               title={isCollapsed ? "Tire Maintenance System" : undefined}
@@ -228,7 +237,7 @@ export default function Sidebar({
             <button
               type="button"
               onClick={() => {
-                if (isCollapsed) onToggleCollapse();
+                if (isCollapsed) {onToggleCollapse();}
                 setIsWorkshopMenuOpen((prev) => !prev);
               }}
               title={isCollapsed ? "Bengkel & Pool Ops" : undefined}

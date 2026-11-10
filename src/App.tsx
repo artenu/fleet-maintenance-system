@@ -1,14 +1,14 @@
 import { useState } from "react";
-import Sidebar, { TireMaintenanceView } from "./components/layout/Sidebar";
+import Sidebar, { type TireMaintenanceView } from "./components/layout/Sidebar";
 import TireInspectionModal from "./components/TireInspectionModal";
 import TireRotationModal, {
-  RotationResultPayload,
+  type RotationResultPayload,
 } from "./components/TireRotationModal";
 
 // Views Terisolasi
 import DigitalTwinView from "./views/DigitalTwinView";
-import AddNewTruckView from "./views/AddNewTruckView";
 import TireInventoryView from "./views/TireInventoryView";
+import AddNewTruckView from "./views/AddNewTruckView";
 import TireHistoryView from "./views/TireHistoryView";
 import TireAnalyticsView from "./views/TireAnalyticsView";
 import TireAuditScheduleView from "./views/TireAuditScheduleView";
@@ -16,13 +16,22 @@ import TireAuditScheduleView from "./views/TireAuditScheduleView";
 import {
   mockTruckTireList,
   mockWarehouseTires,
-  TruckFleetTireItem,
+  type TruckFleetTireItem,
 } from "./data/mockTires";
-import { TireAsset, WheelSlotEvaluation, WheelPosition } from "./types/tires";
+import {
+  type TireAsset,
+  type WheelPosition,
+  type WheelSlotEvaluation,
+} from "./types/truck/tires";
 import { evaluateWheelSlot } from "./utils/tireCalculations";
 import { Truck } from "lucide-react";
 import ReceiveTireModal from "./components/ReceiveTireModal";
-import ToastContainer, { ToastMessage } from "./components/common/Toast";
+import ToastContainer from "./components/common/Toast";
+import { ToastMessage } from "./types/components/common/commonTypes";
+
+import TruckCouplingView from "./views/TruckCouplingView";
+import { mockChassisPoolList } from "./data/mockChassisPool";
+import { type ChassisTrailerAsset } from "./types/truck/tires";
 
 export default function App() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -86,7 +95,9 @@ export default function App() {
   ) => {
     setTruckList((prevList) =>
       prevList.map((truck) => {
-        if (truck.id !== activeTruck.id) return truck;
+        if (truck.id !== activeTruck.id) {
+          return truck;
+        }
 
         const updatedTires = truck.tires.map((t) =>
           t.id === updatedTire.id ? updatedTire : t,
@@ -113,7 +124,9 @@ export default function App() {
     if (payload.mode === "SWAP_POSITION" && payload.targetPosition) {
       setTruckList((prevList) =>
         prevList.map((truck) => {
-          if (truck.id !== activeTruck.id) return truck;
+          if (truck.id !== activeTruck.id) {
+            return truck;
+          }
 
           const updatedTires = truck.tires.map((t) => {
             if (t.id === payload.sourceTire.id) {
@@ -148,7 +161,9 @@ export default function App() {
 
       setTruckList((prevList) =>
         prevList.map((truck) => {
-          if (truck.id !== activeTruck.id) return truck;
+          if (truck.id !== activeTruck.id) {
+            return truck;
+          }
 
           const filteredTires = truck.tires.filter(
             (t) => t.id !== payload.sourceTire.id,
@@ -195,7 +210,9 @@ export default function App() {
   const handleEmergencySwapSpare = (position: WheelPosition) => {
     setTruckList((prevList) =>
       prevList.map((truck) => {
-        if (truck.id !== activeTruck.id) return truck;
+        if (truck.id !== activeTruck.id) {
+          return truck;
+        }
 
         const updatedTires = truck.tires.map((t) => {
           if (t.currentPosition === position) {
@@ -224,7 +241,9 @@ export default function App() {
 
     setTruckList((prevList) =>
       prevList.map((truck) => {
-        if (truck.id !== activeTruck.id) return truck;
+        if (truck.id !== activeTruck.id) {
+          return truck;
+        }
 
         const updatedTires = truck.tires.map((t) => {
           if (t.currentPosition === position) {
@@ -306,6 +325,59 @@ export default function App() {
     setSelectedSlot(nextSlot);
   };
 
+  const [chassisList, setChassisList] =
+    useState<ChassisTrailerAsset[]>(mockChassisPoolList);
+
+  const handleCoupleChassis = (
+    truckId: string,
+    newChassis: ChassisTrailerAsset,
+  ) => {
+    // Update status sasis di pool
+    setChassisList((prev) =>
+      prev.map((c) =>
+        c.id === newChassis.id
+          ? { ...newChassis, status: "ATTACHED", attachedHeadId: truckId }
+          : c.attachedHeadId === truckId
+            ? { ...c, status: "STANDALONE_POOL", attachedHeadId: null }
+            : c,
+      ),
+    );
+
+    // Update truk agar denah rodanya sinkron dengan konfigurasi sasis baru
+    setTruckList((prev) =>
+      prev.map((t) =>
+        t.id === truckId
+          ? {
+              ...t,
+              capacity: newChassis.lengthCategory,
+              chassisType: newChassis.type,
+            }
+          : t,
+      ),
+    );
+    addToast(
+      "success",
+      `Sasis ${newChassis.chassisCode} Berhasil Dikaitkan!`,
+      `Truk sekarang berkonfigurasi ${newChassis.lengthCategory} (${newChassis.type === "2_AXLE" ? "14 Ban" : "18 Ban"}).`,
+    );
+  };
+
+  // Handler Lepas Gandengan (Drop to Pool)
+  const handleUncoupleChassis = (truckId: string) => {
+    setChassisList((prev) =>
+      prev.map((c) =>
+        c.attachedHeadId === truckId
+          ? { ...c, status: "STANDALONE_POOL", attachedHeadId: null }
+          : c,
+      ),
+    );
+    addToast(
+      "info",
+      "Sasis Berhasil Dilepas ke Pool",
+      "Kepala truk kini berstatus Bobtail (tanpa sasis).",
+    );
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-100 text-slate-900 font-sans antialiased">
       {/* 1. Sidebar Navigasi Kiri */}
@@ -338,7 +410,9 @@ export default function App() {
                     {activeView === "digital-twin" &&
                       "Digital Twin & Visualizer Roda"}
                     {activeView === "add-truck" &&
-                      "Tambah Unit Truk Baru & Registrasi Ban"}
+                      "Update Kondisi Ban & Cek Fisik Roda"}
+                    {activeView === "coupling" &&
+                      "Manajemen Perangkaian Armada (Drop & Hook)"}
                     {activeView === "inventory" && "Master Stok & Gudang Ban"}
                     {activeView === "history" && "Log Mutasi & Rotasi Ban"}
                     {activeView === "cpk-analytics" &&
@@ -377,20 +451,6 @@ export default function App() {
                 </select>
               </div>
             )}
-            {activeView === "add-truck" && (
-              <AddNewTruckView
-                onSaveNewTruck={(newTruck) => {
-                  setTruckList((prevList) => [newTruck, ...prevList]);
-                  setSelectedTruckId(newTruck.id);
-                  addToast(
-                    "success",
-                    `Unit Truk ${newTruck.unitCode} Berhasil Didaftarkan!`,
-                    `Total ${newTruck.tires.length} ban tercatat lengkap dan masuk ke Digital Twin.`,
-                  );
-                  setActiveView("digital-twin");
-                }}
-              />
-            )}
           </div>
         </header>
 
@@ -405,6 +465,41 @@ export default function App() {
               onOpenRotation={() => setIsRotationModalOpen(true)}
               onEmergencySwapSpare={handleEmergencySwapSpare}
               onApplyMechanicOverride={handleApplyMechanicOverride}
+            />
+          )}
+
+          {activeView === "add-truck" && (
+            <AddNewTruckView
+              existingTrucks={truckList} // 👈 Agar TRK-001 tidak dideteksi sebagai unit baru
+              onSaveNewTruck={(newTruck) => {
+                setTruckList((prevList) => {
+                  const exists = prevList.some(
+                    (t) => t.unitCode === newTruck.unitCode,
+                  );
+                  if (exists) {
+                    return prevList.map((t) =>
+                      t.unitCode === newTruck.unitCode ? newTruck : t,
+                    );
+                  }
+                  return [newTruck, ...prevList];
+                });
+                setSelectedTruckId(newTruck.id);
+                addToast(
+                  "success",
+                  `Data Ban Unit ${newTruck.unitCode} (${newTruck.plateNumber}) Berhasil Disimpan!`,
+                  `Total ${newTruck.tires.length} ban tercatat lengkap dan masuk ke Digital Twin.`,
+                );
+                setActiveView("digital-twin");
+              }}
+            />
+          )}
+
+          {activeView === "coupling" && (
+            <TruckCouplingView
+              truckList={truckList}
+              chassisList={chassisList}
+              onCouple={handleCoupleChassis}
+              onUncouple={handleUncoupleChassis}
             />
           )}
 
