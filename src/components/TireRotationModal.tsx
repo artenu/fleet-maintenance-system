@@ -7,11 +7,11 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import {
-  WheelSlotEvaluation,
-  TireAsset,
-  WheelPosition,
-  ChassisType,
-} from "../types/tires";
+  type WheelSlotEvaluation,
+  type TireAsset,
+  type WheelPosition,
+  type ChassisType,
+} from "../types/truck/tires";
 
 export type RotationMode = "SWAP_POSITION" | "REPLACE_FROM_WAREHOUSE";
 
@@ -123,42 +123,46 @@ function TireRotationFormContent({
   let violationError: string | null = null;
 
   if (mode === "SWAP_POSITION") {
-    // 1. Cek jika ban asal dipindah ke Steer (H1/H2), wajib R0!
     const isTargetSteer = targetPosition === "H1" || targetPosition === "H2";
-    if (isTargetSteer && sourceTire.retreadStatus !== "R0") {
-      violationError = `PELANGGARAN: Posisi target ${targetPosition} adalah Gandar Kemudi (Steer). Dilarang memasang ban vulkanisir (${sourceTire.retreadStatus})! Wajib ban baru R0.`;
+    if (
+      isTargetSteer &&
+      sourceTire.retreadStatus !== "R0" &&
+      sourceTire.retreadStatus !== "R1"
+    ) {
+      violationError = `PELANGGARAN: Posisi target ${targetPosition} adalah Gandar Kemudi (Steer). Hanya diizinkan Ban Baru (R0) atau 1x Vulkanisir (R1). Ban ${sourceTire.serialNumber} saat ini berstatus ${sourceTire.retreadStatus}!`;
     }
-
-    // 2. Cek jika ban target yang ditukar masuk ke Steer (H1/H2), wajib R0!
     const isSourceSteer =
       sourceSlot.position === "H1" || sourceSlot.position === "H2";
-    if (isSourceSteer && targetTire && targetTire.retreadStatus !== "R0") {
-      violationError = `PELANGGARAN: Posisi ${sourceSlot.position} adalah Gandar Kemudi (Steer). Ban ${targetTire.serialNumber} (${targetTire.retreadStatus}) yang akan dipasang bukan ban baru R0!`;
+    if (
+      isSourceSteer &&
+      targetTire &&
+      targetTire.retreadStatus !== "R0" &&
+      targetTire.retreadStatus !== "R1"
+    ) {
+      violationError = `PELANGGARAN: Posisi ${sourceSlot.position} adalah Gandar Kemudi (Steer). Ban ${targetTire.serialNumber} berstatus ${targetTire.retreadStatus} dilarang dipasang ke Steer (Hanya diizinkan R0 atau R1)!`;
     }
   } else {
-    // Mode REPLACE_FROM_WAREHOUSE
     const isSourceSteer =
       sourceSlot.position === "H1" || sourceSlot.position === "H2";
     if (
       isSourceSteer &&
       selectedWarehouseTire &&
-      selectedWarehouseTire.retreadStatus !== "R0"
+      selectedWarehouseTire.retreadStatus !== "R0" &&
+      selectedWarehouseTire.retreadStatus !== "R1"
     ) {
-      violationError = `PELANGGARAN: Gandar Kemudi ${sourceSlot.position} wajib dipasang ban R0 dari gudang! Ban ${selectedWarehouseTire.serialNumber} berstatus ${selectedWarehouseTire.retreadStatus}.`;
+      violationError = `PELANGGARAN: Gandar Kemudi ${sourceSlot.position} hanya diizinkan Ban Baru (R0) atau 1x Vulkanisir (R1). Ban gudang ${selectedWarehouseTire.serialNumber} berstatus ${selectedWarehouseTire.retreadStatus}!`;
     }
-
-    // Cek jika kirim ke vulkanisir tapi sudah R2
     if (
       sourceDestination === "VULKANISIR" &&
-      sourceTire.retreadStatus === "R2"
+      sourceTire.retreadStatus === "R3"
     ) {
-      violationError = `PELANGGARAN: Ban ${sourceTire.serialNumber} sudah berstatus R2 (Batas Maksimal Vulkanisir 2x). Ban tidak boleh divulkanisir lagi, wajib diafkirkan!`;
+      violationError = `PELANGGARAN: Ban ${sourceTire.serialNumber} sudah berstatus R3 (Batas Maksimal Vulkanisir 3x). Ban tidak boleh divulkanisir lagi, wajib diafkirkan!`;
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (violationError) return;
+    if (violationError) {return;}
 
     onExecuteRotation({
       mode,
@@ -448,7 +452,7 @@ export default function TireRotationModal({
   currentOdometer,
   onExecuteRotation,
 }: TireRotationModalProps) {
-  if (!isOpen || !sourceSlot || !sourceSlot.tire) return null;
+  if (!isOpen || !sourceSlot || !sourceSlot.tire) {return null;}
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">

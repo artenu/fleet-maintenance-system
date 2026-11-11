@@ -43,7 +43,7 @@ export type ChassisType = "2_AXLE" | "3_AXLE";
  * R2 = Vulkanisir ke-2 (Batas maksimal)
  * AFKIR = Rusak Total / Scrap
  */
-export type RetreadStatus = "R0" | "R1" | "R2" | "AFKIR";
+export type RetreadStatus = "R0" | "R1" | "R2" | "R3" | "AFKIR";
 
 /**
  * Status Kesehatan Ban (Decision Matrix Result):
@@ -147,4 +147,28 @@ export interface TireAsset {
   inspectionNotes?: string; // Catatan temuan / rekomendasi
   photoEvidenceUrl?: string; // URL / Preview foto bukti fisik
   actionRecommendation?: ActionRecommendation; // Rekomendasi tindakan lapangan
+}
+
+/**
+ * Decoupling Entitas Armada (MOM 4 & 5 Nov 2026):
+ * Tractor Head dan Chassis Trailer adalah aset mandiri (Drop & Hook).
+ */
+export interface TractorHeadAsset {
+  id: string;
+  unitCode: string; // contoh: "TRK-001"
+  plateNumber: string; // contoh: "B 9123 UEK"
+  brand: string; // contoh: "Hino Ranger FG 260 TH"
+  currentOdometer: number; // KM dari telematics IoT
+  assignedDriver: string; // Supir utama
+  attachedChassisId: string | null; // ID Sasis yang sedang digandeng (jika ada)
+}
+
+export interface ChassisTrailerAsset {
+  id: string;
+  chassisCode: string; // contoh: "CHS-20-001" atau "CHS-40-088"
+  type: ChassisType; // "2_AXLE" (2 sumbu / 14 ban) atau "3_AXLE" (3 sumbu / 18 ban)
+  lengthCategory: "20FT" | "40FT"; // Panjang sasis
+  wheelCount: 14 | 18; // Edge case: Sasis 40ft bisa 14 ban atau 18 ban
+  attachedHeadId: string | null; // ID Tractor Head yang sedang menggandeng
+  status: "ATTACHED" | "STANDALONE_POOL" | "UNDER_REPAIR";
 }

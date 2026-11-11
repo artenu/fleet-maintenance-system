@@ -1,7 +1,7 @@
 import { useState } from "react";
 import WheelLayoutVisualizer from "../components/WheelLayoutVisualizer";
-import { TruckFleetTireItem } from "../data/mockTires";
-import { WheelPosition, WheelSlotEvaluation } from "../types/tires";
+import { type TruckFleetTireItem } from "../data/mockTires";
+import { type WheelPosition, type WheelSlotEvaluation } from "../types/truck/tires";
 import {
   RotateCw,
   ShieldAlert,
@@ -66,7 +66,7 @@ export default function DigitalTwinView({
 
   // Handler Aksi Tukar Ban Serep
   const handleQuickSwapSpare = () => {
-    if (!selectedSlot || !selectedSlot.tire) return;
+    if (!selectedSlot || !selectedSlot.tire) {return;}
 
     // Validasi Golden Rule #1: Jika target adalah Steer H1/H2, ban serep S1 HARUS R0!
     const isSteer =
@@ -89,7 +89,7 @@ export default function DigitalTwinView({
 
   const handleConfirmOverride = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSlot) return;
+    if (!selectedSlot) {return;}
 
     onApplyMechanicOverride(
       selectedSlot.position,
@@ -441,7 +441,7 @@ export default function DigitalTwinView({
                       <div
                         onClick={() => {
                           const tire = selectedSlot.tire;
-                          if (!tire || !tire.photoEvidenceUrl) return;
+                          if (!tire || !tire.photoEvidenceUrl) {return;}
                           setPreviewImage({
                             url: tire.photoEvidenceUrl,
                             title: `Ban ${tire.serialNumber} (${tire.brand})`,

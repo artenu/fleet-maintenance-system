@@ -8,18 +8,18 @@ import {
   ArrowUp,
   Link2,
 } from "lucide-react";
-import { WHEEL_LAYOUT_CONFIG } from "../constants/tireRules";
+import { WHEEL_LAYOUT_CONFIG } from "../constants/truck/tireRules";
 import {
   evaluateWheelSlot,
   checkDualWheelMating,
-  DualWheelMatingCheck,
+  type DualWheelMatingCheck,
 } from "../utils/tireCalculations";
 import {
-  ChassisType,
-  TireAsset,
-  WheelPosition,
-  WheelSlotEvaluation,
-} from "../types/tires";
+  type ChassisType,
+  type TireAsset,
+  type WheelPosition,
+  type WheelSlotEvaluation,
+} from "../types/truck/tires";
 
 interface WheelItemProps {
   pos: WheelPosition;

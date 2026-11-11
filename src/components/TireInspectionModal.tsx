@@ -10,14 +10,16 @@ import {
   Camera,
   Trash2,
   Sparkles,
+  UserCheck,
   ZoomIn,
 } from "lucide-react";
 import {
-  WheelSlotEvaluation,
-  TireAsset,
-  RetreadStatus,
-  ActionRecommendation,
-} from "../types/tires";
+  type WheelSlotEvaluation,
+  type TireAsset,
+  type RetreadStatus,
+  type ActionRecommendation,
+} from "../types/truck/tires";
+import { mockCurrentSurveyor } from "../types/auth/auth";
 
 interface TireInspectionModalProps {
   isOpen: boolean;
@@ -87,13 +89,12 @@ function TireInspectionFormContent({
       tire.actionRecommendation ||
         (initialPercent < 40 ? "REPLACE_SERVICE" : "KEEP"),
     );
-  const [surveyorName, setSurveyorName] = useState<string>(
-    tire.inspectorName || "Bambang Sudiro",
-  );
   const [notes, setNotes] = useState<string>(tire.inspectionNotes || "");
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     tire.photoEvidenceUrl || null,
   );
+
+  const surveyorBadge = `${mockCurrentSurveyor.name} (${mockCurrentSurveyor.nik})`;
 
   // Helper toggle kerusakan
   const toggleDamage = (label: string) => {
@@ -123,7 +124,8 @@ function TireInspectionFormContent({
   const isPhysicalCritical = physicalPercent < 40 || hasSevereDamage;
 
   // Golden Rule #1: Steer wajib R0
-  const isSteerViolation = isSteer && retreadStatus !== "R0";
+  const isSteerViolation =
+    isSteer && retreadStatus !== "R0" && retreadStatus !== "R1";
 
   const liveStatus =
     isSteerViolation || isPhysicalCritical
@@ -145,13 +147,13 @@ function TireInspectionFormContent({
     treadDepthMm,
     pressurePsi,
     visualDamages,
-    inspectorName: surveyorName,
+    inspectorName: surveyorBadge,
     inspectionNotes: notes,
     photoEvidenceUrl: photoPreview || undefined,
     actionRecommendation,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     onSaveInspection(buildUpdatedTire(), odometer);
     onClose();
@@ -159,13 +161,13 @@ function TireInspectionFormContent({
 
   // Label Deskriptif Posisi Gandar (Sisi Supir 🇮🇩 vs Kernet)
   const getPositionDescription = (pos: string) => {
-    if (pos === "H1") return "Gandar 1 Depan • SISI KANAN (SUPIR 🇮🇩)";
-    if (pos === "H2") return "Gandar 1 Depan • SISI KIRI (KERNET / PENUMPANG)";
+    if (pos === "H1") {return "Gandar 1 Depan • SISI KANAN (SUPIR 🇮🇩)";}
+    if (pos === "H2") {return "Gandar 1 Depan • SISI KIRI (KERNET / PENUMPANG)";}
     if (pos === "H3" || pos === "H4")
-      return "Gandar 2 Drive • SISI KANAN (SUPIR 🇮🇩)";
+      {return "Gandar 2 Drive • SISI KANAN (SUPIR 🇮🇩)";}
     if (pos === "H5" || pos === "H6")
-      return "Gandar 2 Drive • SISI KIRI (KERNET)";
-    if (pos === "S1") return "Keranjang Cadangan • BAN SEREP";
+      {return "Gandar 2 Drive • SISI KIRI (KERNET)";}
+    if (pos === "S1") {return "Keranjang Cadangan • BAN SEREP";}
     return `Sasis Trailer • Posisi ${pos}`;
   };
 
@@ -265,12 +267,12 @@ function TireInspectionFormContent({
           <ShieldAlert size={18} className="text-rose-600 shrink-0 mt-0.5" />
           <div>
             <strong className="font-bold">
-              Pelanggaran Golden Rule #1 (Gandar Steer)!
+              Pelanggaran Aturan Gandar Steer!
             </strong>
             <p className="text-[11px] mt-0.5 leading-relaxed">
-              Posisi Kemudi {slot.position} dilarang keras dipasang ban
-              vulkanisir ({retreadStatus}). Demi keselamatan supir dan
-              kestabilan kemudi kontainer, gandar ini wajib ban baru R0!
+              Posisi Kemudi {slot.position} dilarang menggunakan ban vulkanisir
+              lanjut ({retreadStatus}). Gandar steer hanya diizinkan menggunakan
+              Ban Baru (R0) atau maksimal 1x Vulkanisir (R1)!
             </p>
           </div>
         </div>
@@ -356,12 +358,15 @@ function TireInspectionFormContent({
                 }
                 className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 bg-white">
                 <option value="R0">R0 • Ban Baru Asli</option>
-                <option value="R1">R1 • Vulkanisir ke-1</option>
-                <option value="R2">R2 • Vulkanisir ke-2 (Maksimal)</option>
+                <option value="R1">R1 • Vulkanisir ke-1 (Boleh Steer)</option>
+                <option value="R2">R2 • Vulkanisir ke-2</option>
+                <option value="R3">R3 • Vulkanisir ke-3 (Maksimal)</option>
                 <option value="AFKIR">AFKIR • Rusak / Afkir</option>
               </select>
               <span className="text-[10px] text-slate-400 mt-0.5 block">
-                {isSteer ? "Wajib R0 untuk Steer" : "Maksimal 2x Vulkanisir"}
+                {isSteer
+                  ? "Steer diizinkan R0 atau R1"
+                  : "Maksimal 3x Vulkanisir (R3)"}
               </span>
             </div>
           </div>
@@ -584,16 +589,26 @@ function TireInspectionFormContent({
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Nama Surveyor PIC Lapangan:
+            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Surveyor PIC Lapangan:</span>
+              <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <UserCheck size={12} /> Terverifikasi Otomatis
+              </span>
             </label>
-            <input
-              type="text"
-              value={surveyorName}
-              onChange={(e) => setSurveyorName(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
-              required
-            />
+            <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+              <div className="grid h-7 w-7 place-items-center rounded-lg bg-red-600 text-white font-black text-[11px] shrink-0">
+                {mockCurrentSurveyor.name.charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-slate-900 truncate">
+                  {mockCurrentSurveyor.name}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  NIK: {mockCurrentSurveyor.nik} •{" "}
+                  {mockCurrentSurveyor.poolLocation}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -681,7 +696,7 @@ export default function TireInspectionModal({
   onSaveInspection,
   onSaveAndNext,
 }: TireInspectionModalProps) {
-  if (!isOpen || !slot || !slot.tire) return null;
+  if (!isOpen || !slot || !slot.tire) {return null;}
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">

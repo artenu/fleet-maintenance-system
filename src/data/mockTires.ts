@@ -1,4 +1,4 @@
-import { AuditSchedule, ChassisType, TireAsset } from "../types/tires";
+import { type AuditSchedule, type ChassisType, type TireAsset } from "../types/truck/tires";
 
 export interface TruckFleetTireItem {
   id: string;
