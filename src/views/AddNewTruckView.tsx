@@ -1,4 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+// src/views/AddNewTruckView.tsx
+import type { ChassisType, RetreadStatus } from "@/types/truck/tires";
+import { mockCurrentSurveyor } from "@/types/auth/auth";
+import { useTireConditionForm } from "@/hooks/useTireConditionForm";
+import type { AddNewTruckViewProps } from "@/types/AddNewTruckView/AddNewTruckViewTypes";
+
+// 🧱 Design System Reusable
+import { Container, PageHeader, Grid } from "@/components/layout";
+import { Button, Badge, Card, Modal } from "@/components/common";
+import {
+  FormInput,
+  NumberInput,
+  DateInput,
+  SearchableSelect,
+  Select,
+} from "@/components/forms";
+
 import {
   Camera,
   CheckCircle2,
@@ -8,336 +24,50 @@ import {
   BellRing,
   PlusCircle,
   UserCheck,
-  Calendar,
   ScanLine,
   ZoomIn,
   X,
-  Search,
-  ChevronDown,
-  Check,
 } from "lucide-react";
-import { type TruckFleetTireItem } from "../data/mockTires";
-import {
-  type ChassisType,
-  type RetreadStatus,
-  type TireAsset,
-  type WheelPosition,
-} from "../types/truck/tires";
-import { mockCurrentSurveyor } from "../types/auth/auth";
-import {
-  mockCentralTruckApiResponse,
-  deriveChassisTypeFromCapacity,
-} from "../data/MockCentralTruckApi";
-import { getOdometerKmByVin } from "../data/MockHinoIotApi";
-
-interface AddNewTruckViewProps {
-  existingTrucks?: TruckFleetTireItem[]; // Daftar truk yang sudah terdaftar di FMS
-  onSaveNewTruck: (newTruck: TruckFleetTireItem) => void;
-}
-
-// Data input per roda
-interface TireInputData {
-  serialNumber: string;
-  brand: string;
-  pattern: string;
-  retreadStatus: RetreadStatus;
-  pressurePsi: number;
-  treadDepthMm: number;
-  physicalPercent: number;
-  damages: string[];
-  photoUrl: string | null;
-}
 
 export default function AddNewTruckView({
   existingTrucks = [],
   onSaveNewTruck,
 }: AddNewTruckViewProps) {
-  // 1. Deteksi unit truk baru dari database sebelah yang belum didaftarkan bannya di FMS
-  const pendingNewTrucks = mockCentralTruckApiResponse.filter(
-    (centralTruck) =>
-      !existingTrucks.some(
-        (existing) =>
-          existing.unitCode === centralTruck.unitCode ||
-          existing.plateNumber === centralTruck.plateNumber,
-      ),
-  );
-
-  // Default ke unit baru pertama (Unit 18 - B 9211 BEL) jika ada!
-  const defaultTruck = pendingNewTrucks[0] || mockCentralTruckApiResponse[0];
-
-  // ================= DATA IDENTITAS MASTER TRUK (DARI API) =================
-  const [plateNumber, setPlateNumber] = useState<string>(
-    defaultTruck.plateNumber,
-  );
-  const [unitCode, setUnitCode] = useState<string>(defaultTruck.unitCode);
-  const [chassisCode, setChassisCode] = useState<string>(
-    defaultTruck.currentChassisCode || "CHS-018",
-  );
-  const [truckBrand, setTruckBrand] = useState<string>(
-    `${defaultTruck.brand} ${defaultTruck.type}`,
-  );
-  const [chassisType, setChassisType] = useState<ChassisType>(
-    deriveChassisTypeFromCapacity(defaultTruck.capacity),
-  );
-  // Odometer otomatis di-get dari sensor Hino Connect via VIN!
-  const [odometer, setOdometer] = useState<number>(
-    getOdometerKmByVin(defaultTruck.vin, 76890),
-  );
-  const [driverName, setDriverName] = useState<string>(
-    defaultTruck.defaultDriver,
-  );
-  const [inspectionDate, setInspectionDate] = useState<string>(
-    new Date().toISOString().split("T")[0],
-  );
-
-  // State untuk Searchable Dropdown Nomor Polisi
-  const [isPlateDropdownOpen, setIsPlateDropdownOpen] =
-    useState<boolean>(false);
-  const [plateSearchQuery, setPlateSearchQuery] = useState<string>("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  // Tutup dropdown otomatis saat klik di luar area
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsPlateDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-  // Filter pencarian cerdas (bisa cari plat, unitCode, merk, atau supir)
-  const filteredPending = pendingNewTrucks.filter(
-    (t) =>
-      t.plateNumber.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
-      t.unitCode.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
-      t.brand.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
-      t.defaultDriver.toLowerCase().includes(plateSearchQuery.toLowerCase()),
-  );
-  const filteredAll = mockCentralTruckApiResponse.filter(
-    (t) =>
-      t.plateNumber.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
-      t.unitCode.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
-      t.brand.toLowerCase().includes(plateSearchQuery.toLowerCase()) ||
-      t.defaultDriver.toLowerCase().includes(plateSearchQuery.toLowerCase()),
-  );
-
-  // Daftar Posisi Roda Sesuai Sasis (14 atau 18 Roda)
-  const wheelPositions: WheelPosition[] = [
-    "H1",
-    "H2",
-    "H3",
-    "H4",
-    "H5",
-    "H6",
-    "C1",
-    "C2",
-    "C3",
-    "C4",
-    "C5",
-    "C6",
-    "C7",
-    "C8",
-    ...(chassisType === "3_AXLE"
-      ? (["C9", "C10", "C11", "C12"] as WheelPosition[])
-      : []),
-    "S1",
-  ];
-
-  // Roda yang sedang aktif dicatat surveyor
-  const [activeSlot, setActiveSlot] = useState<WheelPosition>("H1");
-
-  // Handler saat surveyor memilih Nomor Polisi di Dropdown
-  const handleSelectPlateNumber = (selectedPlate: string) => {
-    const target = mockCentralTruckApiResponse.find(
-      (t) => t.plateNumber === selectedPlate,
-    );
-    if (target) {
-      setPlateNumber(target.plateNumber);
-      setUnitCode(target.unitCode);
-      setChassisCode(target.currentChassisCode || `CHS-${target.unitCode}`);
-      setTruckBrand(`${target.brand} ${target.type}`);
-      setChassisType(deriveChassisTypeFromCapacity(target.capacity));
-      setDriverName(target.defaultDriver);
-      // Sinkronkan odometer dari IoT Hino Connect secara real-time via VIN
-      setOdometer(getOdometerKmByVin(target.vin, 76890));
-      setActiveSlot("H1");
-    }
-  };
-
-  // Data input per roda
-  const [tiresData, setTiresData] = useState<Record<string, TireInputData>>({
-    H1: {
-      serialNumber: "BS-2024-9988",
-      brand: "Bridgestone",
-      pattern: "R168",
-      retreadStatus: "R0",
-      pressurePsi: 110,
-      treadDepthMm: 8.5,
-      physicalPercent: 65,
-      damages: ["Normal"],
-      photoUrl:
-        "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=600&q=80",
-    },
-  });
-
-  // State Lightbox Modal Gambar Ukuran Penuh
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-
-  // Data ban pada posisi aktif
-  const currentTireForm: TireInputData = tiresData[activeSlot] || {
-    serialNumber: "",
-    brand: "Bridgestone",
-    pattern: "R168",
-    retreadStatus: activeSlot === "H1" || activeSlot === "H2" ? "R0" : "R1",
-    pressurePsi: 110,
-    treadDepthMm: 14.0,
-    physicalPercent: 90,
-    damages: ["Normal"],
-    photoUrl: null,
-  };
-
-  // Helper update form ban aktif
-  const updateCurrentTire = (patch: Partial<TireInputData>) => {
-    setTiresData((prev) => ({
-      ...prev,
-      [activeSlot]: {
-        ...currentTireForm,
-        ...patch,
-      },
-    }));
-  };
-
-  // Toggle Cacat Kerusakan
-  const handleToggleDamage = (label: string) => {
-    let currentDamages = [...currentTireForm.damages];
-    if (label === "Normal") {
-      updateCurrentTire({ damages: ["Normal"] });
-      return;
-    }
-
-    currentDamages = currentDamages.filter((d) => d !== "Normal");
-    if (currentDamages.includes(label)) {
-      currentDamages = currentDamages.filter((d) => d !== label);
-      if (currentDamages.length === 0) {currentDamages = ["Normal"];}
-    } else {
-      currentDamages.push(label);
-    }
-    updateCurrentTire({ damages: currentDamages });
-  };
-
-  // Upload/Kamera Foto
-  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateCurrentTire({ photoUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Navigasi ke Roda Berikutnya
-  const handleNextWheel = () => {
-    const currentIndex = wheelPositions.indexOf(activeSlot);
-    const nextIndex = (currentIndex + 1) % wheelPositions.length;
-    setActiveSlot(wheelPositions[nextIndex]);
-  };
-
-  // Hitung berapa roda yang sudah selesai diisi nomor serinya
-  const completedWheelsCount = wheelPositions.filter(
-    (pos) => tiresData[pos] && tiresData[pos].serialNumber.trim() !== "",
-  ).length;
-
-  // Label Deskripsi Roda Sesuai Standar Indonesia
-  const getSlotDescription = (pos: WheelPosition) => {
-    if (pos === "H1") {return "Gandar 1 Depan • SISI KANAN (SUPIR 🇮🇩)";}
-    if (pos === "H2") {return "Gandar 1 Depan • SISI KIRI (KERNET / PENUMPANG)";}
-    if (pos === "H3" || pos === "H4")
-      {return `Gandar 2 Drive • SISI KANAN (SUPIR 🇮🇩)`;}
-    if (pos === "H5" || pos === "H6")
-      {return `Gandar 2 Drive • SISI KIRI (KERNET)`;}
-    if (pos === "S1") {return "Keranjang Cadangan • BAN SEREP (SPARE)";}
-    return `Sasis Gandengan Trailer • Posisi ${pos}`;
-  };
-
-  // Validasi Golden Rule #1: Kemudi Steer Wajib R0
-  const isSteer = activeSlot === "H1" || activeSlot === "H2";
-  const isSteerViolation =
-    isSteer &&
-    currentTireForm.retreadStatus !== "R0" &&
-    currentTireForm.retreadStatus !== "R1";
-
-  // Simpan Truk Baru ke Database Master
-  const handleRegisterTruck = () => {
-    const surveyorBadge = `${mockCurrentSurveyor.name} (${mockCurrentSurveyor.nik})`;
-    const compiledTires: TireAsset[] = wheelPositions.map((pos, idx) => {
-      const data = tiresData[pos] || {
-        serialNumber: `SN-${unitCode}-${pos}`,
-        brand: "Super Grip / MI RFD",
-        pattern: "Standar",
-        retreadStatus: pos === "H1" || pos === "H2" ? "R0" : "R1",
-        pressurePsi: 115,
-        treadDepthMm: 12.0,
-        physicalPercent: 80,
-        damages: ["Normal"],
-        photoUrl: null,
-      };
-
-      return {
-        id: `TIRE-${unitCode}-${pos}-${idx}`,
-        serialNumber: data.serialNumber || `SN-${unitCode}-${pos}`,
-        brand:
-          `${data.brand} ${data.pattern ? `/ ${data.pattern}` : ""}`.trim(),
-        size: "10.00-20 16PR",
-        retreadStatus: data.retreadStatus,
-        currentVehicleId: unitCode,
-        currentPosition: pos,
-        installOdometer: odometer,
-        lastInspectionPercent: data.physicalPercent,
-        lastInspectionDate: inspectionDate,
-        treadDepthMm: data.treadDepthMm,
-        pressurePsi: data.pressurePsi,
-        visualDamages: data.damages,
-        inspectorName: surveyorBadge,
-        photoEvidenceUrl: data.photoUrl || undefined,
-        actionRecommendation:
-          data.physicalPercent < 40 ? "REPLACE_SERVICE" : "KEEP",
-      };
-    });
-
-    const newTruckRecord: TruckFleetTireItem = {
-      id: unitCode,
-      unitCode,
-      plateNumber,
-      brand: truckBrand,
-      driver: driverName,
-      capacity: chassisType === "2_AXLE" ? "20FT" : "40FT",
-      chassisType,
-      currentOdometer: odometer,
-      lastIotSync: "Baru saja terdaftar di pool",
-      auditSchedule: {
-        period: "November 2026",
-        lastAuditDate: inspectionDate,
-        nextAuditSchedule: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        status: "COMPLETED",
-        surveyorName: surveyorBadge,
-        rescheduledTo: null,
-        rescheduleReason: null,
-      },
-      tires: compiledTires,
-    };
-    onSaveNewTruck(newTruckRecord);
-  };
+  const {
+    pendingNewTrucks,
+    plateOptions,
+    plateNumber,
+    unitCode,
+    chassisCode,
+    truckBrand,
+    chassisType,
+    odometer,
+    driverName,
+    inspectionDate,
+    setInspectionDate,
+    setChassisType,
+    handleSelectPlateNumber,
+    wheelPositions,
+    activeSlot,
+    setActiveSlot,
+    completedWheelsCount,
+    getSlotDescription,
+    currentTireForm,
+    updateCurrentTire,
+    handleToggleDamage,
+    handlePhotoCapture,
+    handleNextWheel,
+    isSteer,
+    isSteerViolation,
+    handleRegisterTruck,
+    previewImage,
+    setPreviewImage,
+    tiresData,
+  } = useTireConditionForm({ existingTrucks, onSaveNewTruck });
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
-      {/* ================= BANNER PELACAK UNIT BARU DARI DATABASE PUSAT ================= */}
+    <Container className="space-y-6 pb-12 animate-in fade-in duration-200">
+      {/* ================= BANNER PELACAK UNIT BARU ================= */}
       {pendingNewTrucks.length > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-blue-950 shadow-2xs">
           <div className="flex items-center gap-2.5">
@@ -345,369 +75,158 @@ export default function AddNewTruckView({
               <BellRing size={16} className="animate-bounce" />
             </div>
             <div>
-              <p className="text-xs font-extrabold text-blue-900">
+              <p className="text-xs font-bold text-blue-900">
                 Terdeteksi {pendingNewTrucks.length} Unit Truk Baru dari
                 Database Pusat!
               </p>
-              <p className="text-[11px] text-blue-700">
+              <p className="text-[11px] text-blue-700 mt-0.5">
                 Unit{" "}
                 {pendingNewTrucks
                   .map((t) => `${t.plateNumber} (${t.brand})`)
                   .join(", ")}{" "}
-                telah terdaftar di database pengadaan. Silakan pilih unit pada
-                dropdown di bawah untuk inisialisasi bannya.
+                terdaftar di pengadaan. Pilih unit di bawah untuk melengkapi
+                kondisi bannya.
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-lg bg-blue-100 border border-blue-200 px-2.5 py-1 text-[10px] font-black uppercase text-blue-800">
-            {pendingNewTrucks.length} Butuh Ban
-          </span>
+          <Badge variant="info">{pendingNewTrucks.length} Butuh Ban</Badge>
         </div>
       )}
 
-      {/* ================= 1. HEADER & FORM DATA MASTER TRUK ================= */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3.5">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-red-600 text-white shadow-md shadow-red-500/20">
-              <PlusCircle size={26} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-slate-900 tracking-tight">
-                  Update Kondisi Ban & Cek Fisik Roda
-                </h1>
-                <span className="rounded-md bg-blue-100 text-blue-700 px-2 py-0.5 text-[10px] font-black uppercase">
-                  DATA API SEBELAH
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Pilih nomor polisi unit truk dari database sebelah dan
-                input/update seluruh kondisi ban yang terpasang
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* ================= 1. HEADER & FORM DATA MASTER TRUK (GRID 3x3 SIMETRIS) ================= */}
+      <Card className="space-y-5">
+        <PageHeader
+          icon={PlusCircle}
+          iconBgColor="bg-red-600 shadow-red-500/20"
+          title="Update Kondisi Ban & Cek Fisik Roda"
+          subtitle="Pilih nomor polisi unit truk dari database sebelah dan input/update seluruh kondisi ban yang terpasang"
+          badge="Data API Sebelah"
+          badgeColor="bg-blue-100 text-blue-700"
+          flush // 👈 Otomatis bersih tanpa border, shadow, dan p-6!
+        />
 
-        {/* Input Form Master Truk */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-          {/* 1. NOMOR POLISI (DROPDOWN SESUAI MOM 9-11-2026) */}
-          {/* 1. NOMOR POLISI (SEARCHABLE DROPDOWN) */}
-          <div className="sm:col-span-2 relative" ref={dropdownRef}>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+        {/* Form Master Truk: Simetris 3 Kolom x 3 Baris */}
+        <Grid cols={1} mdCols={3} gap="md">
+          {/* BARIS 1: IDENTITAS TRUK */}
+          <div className="w-full text-xs">
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center justify-between">
               <span>Nomor Polisi (Plat Truk)</span>
-              <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded flex items-center gap-1">
-                <Search size={10} /> Bisa Diketik / Dicari
-              </span>
+              <Badge variant="danger">Dari API</Badge>
             </label>
-
-            {/* Tombol Pemilih (Trigger Button) */}
-            <button
-              type="button"
-              onClick={() => setIsPlateDropdownOpen(!isPlateDropdownOpen)}
-              className="w-full flex items-center justify-between rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left font-bold text-slate-900 shadow-2xs hover:border-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition">
-              <div className="flex items-center gap-2 truncate">
-                <span className="font-black text-slate-900">{plateNumber}</span>
-                <span className="text-slate-400">•</span>
-                <span className="text-xs font-semibold text-slate-600 truncate">
-                  Unit {unitCode} ({truckBrand})
-                </span>
-                {pendingNewTrucks.some(
-                  (t) => t.plateNumber === plateNumber,
-                ) && (
-                  <span className="rounded bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 font-black uppercase shrink-0">
-                    Unit Baru
-                  </span>
-                )}
-              </div>
-              <ChevronDown
-                size={16}
-                className={`text-slate-400 shrink-0 transition-transform ${
-                  isPlateDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Menu Popover Pencarian */}
-            {isPlateDropdownOpen && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-40 rounded-2xl border border-slate-200 bg-white shadow-xl p-2 space-y-2 animate-in fade-in zoom-in-95 duration-100">
-                {/* Kotak Input Search */}
-                <div className="relative">
-                  <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Ketik plat nomor, unit, merk, atau supir..."
-                    value={plateSearchQuery}
-                    onChange={(e) => setPlateSearchQuery(e.target.value)}
-                    autoFocus
-                    className="w-full pl-8 pr-8 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/10"
-                  />
-                  {plateSearchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setPlateSearchQuery("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      <X size={13} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Daftar Opsi Hasil Pencarian */}
-                <div className="max-h-56 overflow-y-auto space-y-1 pr-1 text-xs">
-                  {/* Grup 1: Unit Baru dari API */}
-                  {filteredPending.length > 0 && (
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-blue-700 px-2 py-1 block bg-blue-50/70 rounded-md mb-1">
-                        ✨ Unit Baru Menunggu Registrasi Ban (
-                        {filteredPending.length})
-                      </span>
-                      {filteredPending.map((t) => {
-                        const isSelected = plateNumber === t.plateNumber;
-                        return (
-                          <div
-                            key={t.plateNumber}
-                            onClick={() => {
-                              handleSelectPlateNumber(t.plateNumber);
-                              setIsPlateDropdownOpen(false);
-                              setPlateSearchQuery("");
-                            }}
-                            className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
-                              isSelected
-                                ? "bg-red-50 text-red-700 font-bold"
-                                : "hover:bg-slate-50 text-slate-700"
-                            }`}>
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-extrabold text-slate-900">
-                                  {t.plateNumber}
-                                </span>
-                                <span className="text-slate-400">•</span>
-                                <span className="font-semibold text-slate-600">
-                                  Unit {t.unitCode}
-                                </span>
-                                <span className="rounded bg-blue-100 text-blue-800 px-1.5 py-0.5 text-[9px] font-black">
-                                  BUTUH BAN
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-slate-500 mt-0.5">
-                                {t.brand} {t.type} • {t.capacity} • Supir:{" "}
-                                {t.defaultDriver}
-                              </p>
-                            </div>
-                            {isSelected && (
-                              <Check
-                                size={14}
-                                className="text-red-600 shrink-0"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Grup 2: Semua Unit di Database */}
-                  <div>
-                    <span className="text-[10px] font-black uppercase text-slate-400 px-2 py-1 block mt-1">
-                      🚛 Semua Unit di Database ({filteredAll.length})
-                    </span>
-                    {filteredAll.map((t) => {
-                      const isSelected = plateNumber === t.plateNumber;
-                      return (
-                        <div
-                          key={t.plateNumber}
-                          onClick={() => {
-                            handleSelectPlateNumber(t.plateNumber);
-                            setIsPlateDropdownOpen(false);
-                            setPlateSearchQuery("");
-                          }}
-                          className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
-                            isSelected
-                              ? "bg-red-50 text-red-700 font-bold"
-                              : "hover:bg-slate-50 text-slate-700"
-                          }`}>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-extrabold text-slate-900">
-                                {t.plateNumber}
-                              </span>
-                              <span className="text-slate-400">•</span>
-                              <span className="font-semibold text-slate-600">
-                                Unit {t.unitCode}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              {t.brand} {t.type} • {t.capacity} • Supir:{" "}
-                              {t.defaultDriver}
-                            </p>
-                          </div>
-                          {isSelected && (
-                            <Check
-                              size={14}
-                              className="text-red-600 shrink-0"
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {filteredPending.length === 0 &&
-                      filteredAll.length === 0 && (
-                        <div className="p-4 text-center text-slate-400 text-xs">
-                          Tidak ada unit truk yang cocok dengan pencarian "
-                          {plateSearchQuery}"
-                        </div>
-                      )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Kode Unit Truk
-            </label>
-            <input
-              type="text"
-              value={unitCode}
-              readOnly
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-600 focus:outline-none cursor-not-allowed uppercase"
+            <SearchableSelect
+              options={plateOptions}
+              value={plateNumber}
+              onChange={handleSelectPlateNumber}
+              placeholder="Pilih Nomor Polisi..."
+              searchPlaceholder="Ketik plat, unit, supir..."
             />
           </div>
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Kode Sasis (Chassis ID)
-            </label>
-            <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-blue-700">
-              {chassisCode}
-            </div>
-          </div>
+          <FormInput
+            label="Kode Unit Truk"
+            value={unitCode}
+            readOnly
+            className="uppercase cursor-not-allowed"
+          />
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Konfigurasi Gandar Sasis
-            </label>
-            <select
-              value={chassisType}
-              onChange={(e) => setChassisType(e.target.value as ChassisType)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none">
-              <option value="2_AXLE">
-                2 Sumbu • 14 Ban (Trailer 20ft / 40ft Pendek)
-              </option>
-              <option value="3_AXLE">
-                3 Sumbu • 18 Ban (Trailer 40ft Standar)
-              </option>
-            </select>
-          </div>
+          <FormInput
+            label="Merk / Model Truk"
+            value={truckBrand}
+            readOnly
+            className="cursor-not-allowed"
+          />
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
-              <span>Odometer Dashboard (KM)</span>
-              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
-                IoT Hino Connect
-              </span>
-            </label>
-            <input
-              type="number"
-              value={odometer}
-              readOnly
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-600 focus:outline-none cursor-not-allowed"
-            />
-          </div>
+          {/* BARIS 2: GANDENGAN & SUPIR */}
+          <FormInput
+            label="Kode Sasis (Chassis ID)"
+            value={chassisCode}
+            readOnly
+            className="font-bold text-blue-700 cursor-not-allowed"
+          />
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Merk / Model Truk
-            </label>
-            <input
-              type="text"
-              value={truckBrand}
-              readOnly
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-semibold text-slate-600 focus:outline-none cursor-not-allowed"
-            />
-          </div>
+          <Select
+            label="Konfigurasi Gandar Sasis"
+            value={chassisType}
+            onChange={(e) => setChassisType(e.target.value as ChassisType)}>
+            <option value="2_AXLE">
+              2 Sumbu • 14 Ban (Trailer 20ft / 40ft Pendek)
+            </option>
+            <option value="3_AXLE">
+              3 Sumbu • 18 Ban (Trailer 40ft Standar)
+            </option>
+          </Select>
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Nama Supir Utama
-            </label>
-            <input
-              type="text"
-              value={driverName}
-              readOnly
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-semibold text-slate-600 focus:outline-none cursor-not-allowed"
-            />
-          </div>
+          <FormInput
+            label="Nama Supir Utama"
+            value={driverName}
+            readOnly
+            className="cursor-not-allowed"
+          />
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-              <Calendar size={13} className="text-slate-500" />
-              Tanggal Pengecekan
-            </label>
-            <input
-              type="date"
-              value={inspectionDate}
-              onChange={(e) => setInspectionDate(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none"
-              required
-            />
-          </div>
+          {/* BARIS 3: TELEMATICS, TANGGAL & SURVEYOR */}
+          <NumberInput
+            label="Odometer Dashboard (KM)"
+            subLabel={<Badge variant="info">IoT Hino</Badge>}
+            value={odometer}
+            onChange={() => {}}
+            readOnly
+            suffixText="KM"
+          />
 
-          <div className="sm:col-span-3">
-            <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+          <DateInput
+            label="Tanggal Pengecekan"
+            value={inspectionDate}
+            onChange={(e) => setInspectionDate(e.target.value)}
+            required
+          />
+
+          <div className="w-full text-xs">
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center justify-between">
               <span>Surveyor PIC Lapangan</span>
               <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
-                <UserCheck size={11} /> Akun Login Terverifikasi
+                <UserCheck size={11} /> Terverifikasi
               </span>
             </label>
-            <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs text-slate-800 font-bold truncate">
-              {mockCurrentSurveyor.name} ({mockCurrentSurveyor.nik}) •{" "}
-              {mockCurrentSurveyor.poolLocation}
+            <div className="w-full h-10 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 flex items-center font-semibold text-slate-800 text-xs truncate">
+              {mockCurrentSurveyor.name} ({mockCurrentSurveyor.nik})
             </div>
           </div>
-        </div>
-      </div>
+        </Grid>
+      </Card>
 
-      {/* ================= 2. MATRIX SELURUH RODA (WALKAROUND PROGRESS) ================= */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      {/* ================= 2. MATRIX SELURUH RODA (WALKAROUND) ================= */}
+      <Card className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Pilih Roda untuk Pencatatan Fisik: Unit {unitCode} ({plateNumber})
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 mt-0.5">
               Sisi Kanan adalah{" "}
               <strong className="text-blue-700">Sisi Supir 🇮🇩</strong> • Sisi
               Kiri adalah <strong>Sisi Kernet</strong>
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-              Kemajuan: <strong>{completedWheelsCount}</strong> dari{" "}
-              {wheelPositions.length} Roda Terdata
-            </span>
-          </div>
+          <Badge variant="neutral">
+            Kemajuan: <strong>{completedWheelsCount}</strong> dari{" "}
+            {wheelPositions.length} Roda Terdata
+          </Badge>
         </div>
 
-        {/* Deretan Tombol Roda */}
+        {/* Tombol Roda */}
         <div className="flex flex-wrap gap-2 pt-1">
           {wheelPositions.map((pos) => {
             const isSelected = activeSlot === pos;
             const data = tiresData[pos];
-            const isFilled = data && data.serialNumber.trim() !== "";
+            const isFilled = Boolean(data && data.serialNumber.trim() !== "");
 
             return (
               <button
                 key={pos}
                 type="button"
                 onClick={() => setActiveSlot(pos)}
-                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition shadow-2xs ${
+                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer ${
                   isSelected
                     ? "bg-red-600 text-white shadow-md shadow-red-500/30 scale-105"
                     : isFilled
@@ -728,27 +247,27 @@ export default function AddNewTruckView({
             );
           })}
         </div>
-      </div>
+      </Card>
 
-      {/* ================= 3. FORMULIR PENCATATAN 7 PARAMETER SPESIFIK ================= */}
+      {/* ================= 3. FORMULIR PENCATATAN 7 PARAMETER ================= */}
       <div className="rounded-2xl border-2 border-red-200 bg-white p-6 shadow-md space-y-6">
         {/* Banner Roda Aktif */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-red-50/60 p-4 rounded-xl border border-red-200">
           <div>
-            <span className="text-[10px] font-black uppercase text-red-700 tracking-wider block">
+            <span className="text-[10px] font-bold uppercase text-red-700 tracking-wider block">
               MENCATAT RODA:
             </span>
-            <h2 className="text-base font-black text-slate-900 mt-0.5">
+            <h2 className="text-sm font-black text-slate-900 mt-0.5">
               Posisi {activeSlot} • {getSlotDescription(activeSlot)}
             </h2>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black bg-white text-slate-800 px-3 py-1 rounded-lg border border-red-200 shadow-2xs">
+            <Badge variant="neutral">
               {currentTireForm.retreadStatus} (
               {currentTireForm.retreadStatus === "R0" ? "Baru" : "Vulkanisir"})
-            </span>
-            <span className="text-xs font-black bg-red-600 text-white px-3 py-1 rounded-lg shadow-xs">
+            </Badge>
+            <span className="text-xs font-bold bg-red-600 text-white px-3 py-1 rounded-lg shadow-xs">
               {currentTireForm.physicalPercent}% Alur Fisik
             </span>
           </div>
@@ -757,39 +276,39 @@ export default function AddNewTruckView({
         {/* Peringatan Golden Rule Kemudi Steer */}
         {isSteerViolation && (
           <div className="flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50 p-3.5 text-rose-950 text-xs">
-            <ShieldAlert size={20} className="text-rose-600 shrink-0 mt-0.5" />
+            <ShieldAlert size={18} className="text-rose-600 shrink-0 mt-0.5" />
             <div>
               <strong className="font-bold block">
                 Pelanggaran Golden Rule #1 (Gandar Kemudi Steer)!
               </strong>
               <p className="text-[11px] text-rose-800 mt-0.5 leading-relaxed">
-                Posisi Steer {activeSlot} dilarang menggunakan ban vulkanisir (
-                {currentTireForm.retreadStatus}). Wajib pasang ban baru R0 demi
-                keselamatan manuver setir di jalan raya!
+                Posisi Steer {activeSlot} dilarang menggunakan ban vulkanisir
+                lanjut ({currentTireForm.retreadStatus}). Sesuai SOP PT ALN,
+                gandar kemudi steer hanya diizinkan Ban Baru (R0) atau Maksimal
+                1x Vulkanisir (R1) demi keselamatan manuver di jalan raya!
               </p>
             </div>
           </div>
         )}
 
-        {/* 7 PARAMETER INPUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-xs">
+        {/* 7 Parameter Input (Konsisten text-xs font-semibold) */}
+        <Grid cols={1} mdCols={2} lgCols={3} gap="md">
           {/* 1. NO. SERI BAN */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 p-3.5 bg-slate-50/30">
-            <label className="font-extrabold text-slate-800 flex items-center justify-between">
-              <span>1. No. Seri Ban (DOT / Serial)</span>
-              <button
-                type="button"
-                onClick={() =>
-                  updateCurrentTire({
-                    serialNumber: `BS-2024-${Math.floor(1000 + Math.random() * 9000)}`,
-                  })
-                }
-                className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 font-bold">
-                <ScanLine size={12} /> Scan Barcode
-              </button>
-            </label>
-            <input
-              type="text"
+          <div className="space-y-1 rounded-xl border border-slate-200 p-3.5 bg-slate-50/40">
+            <FormInput
+              label="1. No. Seri Ban (DOT / Serial)"
+              subLabel={
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateCurrentTire({
+                      serialNumber: `BS-2024-${Math.floor(1000 + Math.random() * 9000)}`,
+                    })
+                  }
+                  className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1 font-bold cursor-pointer">
+                  <ScanLine size={12} /> Scan Barcode
+                </button>
+              }
               placeholder="[ BS-2024-9988 ]"
               value={currentTireForm.serialNumber}
               onChange={(e) =>
@@ -797,110 +316,109 @@ export default function AddNewTruckView({
                   serialNumber: e.target.value.toUpperCase(),
                 })
               }
-              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 font-black text-slate-900 focus:border-red-500 focus:outline-none uppercase text-sm"
+              className="uppercase font-bold"
+              helperText="Nomor tertera pada dinding samping ban"
               required
             />
-            <span className="text-[10px] text-slate-400 block">
-              Nomor tertera pada dinding samping ban
-            </span>
           </div>
 
           {/* 2. MERK & POLA */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 p-3.5 bg-slate-50/30">
-            <label className="font-extrabold text-slate-800 block">
+          <div className="space-y-1 rounded-xl border border-slate-200 p-3.5 bg-slate-50/40">
+            <label className="text-xs font-semibold text-slate-700 block mb-1">
               2. Merk & Pola Tapak (Pattern)
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <input
-                type="text"
+              <FormInput
                 placeholder="Bridgestone"
                 value={currentTireForm.brand}
                 onChange={(e) => updateCurrentTire({ brand: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none"
               />
-              <input
-                type="text"
-                placeholder="R168 / Karet Medan"
+              <FormInput
+                placeholder="R168"
                 value={currentTireForm.pattern}
                 onChange={(e) => updateCurrentTire({ pattern: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-900 focus:border-red-500 focus:outline-none"
               />
             </div>
-            <span className="text-[10px] text-slate-400 block">
-              Contoh: Bridgestone / R168 atau PT Boxer / Karet Medan
+            <span className="text-[10px] text-slate-400 block mt-1">
+              Contoh: Bridgestone / R168
             </span>
           </div>
 
           {/* 3. STATUS CASING */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 p-3.5 bg-slate-50/30">
-            <label className="font-extrabold text-slate-800 block">
-              3. Status Casing / Vulkanisir
-            </label>
-            <select
+          <div className="space-y-1 rounded-xl border border-slate-200 p-3.5 bg-slate-50/40">
+            <Select
+              label="3. Status Casing / Vulkanisir"
+              subLabel={
+                currentTireForm.retreadStatus === "R0" ? (
+                  <Badge variant="info">R0 Baru</Badge>
+                ) : currentTireForm.retreadStatus === "R1" ? (
+                  <Badge variant="warning">R1 Vulkanisir</Badge>
+                ) : currentTireForm.retreadStatus === "R2" ? (
+                  <Badge variant="warning">R2 Vulkanisir</Badge>
+                ) : currentTireForm.retreadStatus === "R3" ? (
+                  <Badge variant="danger">R3 Maksimal</Badge>
+                ) : (
+                  <Badge variant="danger">Afkir</Badge>
+                )
+              }
               value={currentTireForm.retreadStatus}
               onChange={(e) =>
                 updateCurrentTire({
                   retreadStatus: e.target.value as RetreadStatus,
                 })
               }
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-black text-slate-900 bg-white focus:border-red-500 focus:outline-none">
+              error={
+                isSteerViolation
+                  ? `Posisi Steer (${activeSlot}) dilarang menggunakan ${currentTireForm.retreadStatus}. Wajib R0 atau R1!`
+                  : undefined
+              }
+              helperText={
+                isSteer
+                  ? "SOP Gandar Steer: Hanya diizinkan R0 atau R1 demi keselamatan"
+                  : "Siklus Casing: Maksimal 3x Vulkanisir (R0 → R1 → R2 → R3 → Afkir)"
+              }>
               <option value="R0">R0 • Ban Baru Asli (Casing Baru)</option>
-              <option value="R1">R1 • Vulkanisir ke-1 (Boleh Steer)</option>
-              <option value="R2">R2 • Vulkanisir ke-2</option>
-              <option value="R3">R3 • Vulkanisir ke-3 (Maksimal)</option>
-              <option value="AFKIR">AFKIR • Rusak / Afkir</option>
-            </select>
-            <span className="text-[10px] text-slate-400 block">
-              {isSteer
-                ? "Steer diizinkan R0 atau R1"
-                : "Maksimal 3x Vulkanisir (R3)"}
-            </span>
+              <option value="R1">R1 • Vulkanisir ke-1 (Diizinkan Steer)</option>
+              <option value="R2" disabled={isSteer}>
+                R2 • Vulkanisir ke-2 {isSteer ? "(Dilarang Gandar Steer)" : ""}
+              </option>
+              <option value="R3" disabled={isSteer}>
+                R3 • Vulkanisir ke-3 {isSteer ? "(Dilarang Gandar Steer)" : "(Batas Maksimal)"}
+              </option>
+              <option value="AFKIR">AFKIR • Rusak / Afkir (Wajib Scrap)</option>
+            </Select>
           </div>
 
           {/* 4. TEKANAN ANGIN */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 p-3.5 bg-slate-50/30">
-            <label className="font-extrabold text-slate-800 flex items-center justify-between">
-              <span>4. Tekanan Angin (PSI)</span>
-              <span className="text-[10px] font-bold text-slate-500">
-                Ideal: 110 - 120 PSI
-              </span>
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                placeholder="110"
-                value={currentTireForm.pressurePsi}
-                onChange={(e) =>
-                  updateCurrentTire({ pressurePsi: Number(e.target.value) })
-                }
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 font-black text-slate-900 focus:border-red-500 focus:outline-none text-sm"
-              />
-              <span className="absolute right-3 top-2.5 text-xs font-black text-slate-400">
-                PSI
-              </span>
-            </div>
+          <div className="space-y-1 rounded-xl border border-slate-200 p-3.5 bg-slate-50/40">
+            <NumberInput
+              label="4. Tekanan Angin (PSI)"
+              subLabel={
+                <span className="text-[10px] text-slate-500">
+                  Ideal: 110-120
+                </span>
+              }
+              value={currentTireForm.pressurePsi}
+              onChange={(val) => updateCurrentTire({ pressurePsi: val })}
+              suffixText="PSI"
+            />
             <span className="text-[10px] text-slate-400 block">
               Ukur menggunakan tire pressure gauge
             </span>
           </div>
 
-          {/* 5. KEDALAMAN ALUR & AUTO-HITUNG PERSEN */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 p-3.5 bg-slate-50/30">
-            <label className="font-extrabold text-slate-800 flex items-center justify-between">
-              <span>5. Kedalaman Alur (mm)</span>
-              <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                Auto-Hitung: {currentTireForm.physicalPercent}% Prima
-              </span>
-            </label>
-            <input
-              type="number"
-              step="0.5"
-              min="0"
-              max="25"
-              placeholder="8.5"
+          {/* 5. KEDALAMAN ALUR */}
+          <div className="space-y-1 rounded-xl border border-slate-200 p-3.5 bg-slate-50/40">
+            <NumberInput
+              label="5. Kedalaman Alur (mm)"
+              subLabel={
+                <Badge variant="danger">
+                  Auto: {currentTireForm.physicalPercent}% Prima
+                </Badge>
+              }
               value={currentTireForm.treadDepthMm}
-              onChange={(e) => {
-                const val = Number(e.target.value);
+              allowDecimals
+              onChange={(val) => {
                 const computedPercent = Math.min(
                   100,
                   Math.round((val / 15) * 100),
@@ -910,7 +428,7 @@ export default function AddNewTruckView({
                   physicalPercent: computedPercent,
                 });
               }}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 font-black text-slate-900 focus:border-red-500 focus:outline-none text-sm"
+              suffixText="mm"
             />
             <span className="text-[10px] text-slate-400 block">
               Batas Kritis Penggantian: &lt; 4.0 mm
@@ -918,8 +436,8 @@ export default function AddNewTruckView({
           </div>
 
           {/* 7. BUKTI FOTO LAPANGAN */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 p-3.5 bg-slate-50/30">
-            <label className="font-extrabold text-slate-800 block">
+          <div className="space-y-1 rounded-xl border border-slate-200 p-3.5 bg-slate-50/40">
+            <label className="text-xs font-semibold text-slate-700 block">
               7. Bukti Foto Lapangan
             </label>
             {currentTireForm.photoUrl ? (
@@ -942,14 +460,14 @@ export default function AddNewTruckView({
                     e.stopPropagation();
                     updateCurrentTire({ photoUrl: null });
                   }}
-                  className="absolute top-1.5 right-1.5 bg-rose-600 text-white p-1 rounded shadow hover:bg-rose-700 z-10">
+                  className="absolute top-1.5 right-1.5 bg-rose-600 text-white p-1 rounded shadow hover:bg-rose-700 z-10 cursor-pointer">
                   <X size={12} />
                 </button>
               </div>
             ) : (
               <label className="flex items-center justify-center gap-2 h-24 border-2 border-dashed border-slate-300 rounded-xl bg-white hover:bg-slate-50 transition cursor-pointer text-center p-2">
                 <Camera size={18} className="text-red-600" />
-                <span className="font-bold text-slate-700 text-xs">
+                <span className="font-semibold text-slate-700 text-xs">
                   [ 📷 Upload / Kamera ]
                 </span>
                 <input
@@ -962,14 +480,14 @@ export default function AddNewTruckView({
               </label>
             )}
           </div>
-        </div>
+        </Grid>
 
         {/* 6. INDIKASI CACAT LAPANGAN */}
         <div className="space-y-2 pt-2 border-t border-slate-100">
-          <label className="font-extrabold text-slate-800 text-xs block">
+          <label className="font-semibold text-slate-700 text-xs block">
             6. Indikasi Cacat Fisik:
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-xs">
+          <Grid cols={2} smCols={3} mdCols={6} gap="sm">
             {[
               "Normal",
               "Benjol / Bulge",
@@ -984,7 +502,7 @@ export default function AddNewTruckView({
                   key={defect}
                   type="button"
                   onClick={() => handleToggleDamage(defect)}
-                  className={`flex items-center gap-2 p-2 rounded-xl border text-left font-bold transition ${
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-left font-semibold transition text-xs cursor-pointer ${
                     isChecked
                       ? defect === "Normal"
                         ? "border-emerald-400 bg-emerald-50 text-emerald-800"
@@ -1005,7 +523,7 @@ export default function AddNewTruckView({
                 </button>
               );
             })}
-          </div>
+          </Grid>
         </div>
 
         {/* Footer Tombol Navigasi Walkaround */}
@@ -1015,69 +533,56 @@ export default function AddNewTruckView({
             keliling ke roda berikutnya.
           </span>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleNextWheel}
-              className="flex items-center gap-1.5 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-black text-white hover:bg-red-700 shadow-md shadow-red-500/25 transition">
-              <span>Simpan & Roda Berikutnya</span>
-              <ArrowRight size={15} />
-            </button>
-          </div>
+          <Button
+            variant="primary"
+            size="md"
+            icon={ArrowRight}
+            iconPosition="right"
+            onClick={handleNextWheel}
+            className="shadow-red-500/25">
+            Simpan & Roda Berikutnya
+          </Button>
         </div>
       </div>
 
       {/* ================= 4. TOMBOL FINAL: DAFTARKAN TRUK KE SISTEM ================= */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+      <Card className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h4 className="text-sm font-black text-slate-900">
+          <h4 className="text-sm font-bold text-slate-900">
             Selesai Memeriksa Seluruh Ban Truk {unitCode}?
           </h4>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 mt-0.5">
             Truk baru beserta seluruh data riil bannya akan resmi didaftarkan
             dan langsung aktif di Digital Twin.
           </p>
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="lg"
+          icon={Save}
           onClick={handleRegisterTruck}
-          className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-xs font-black text-white hover:bg-slate-800 shadow-md transition">
-          <Save size={16} className="text-emerald-400" />
-          <span>Daftarkan Unit Truk ke Sistem Armada</span>
-        </button>
-      </div>
+          className="shadow-md">
+          Daftarkan Unit Truk ke Sistem Armada
+        </Button>
+      </Card>
 
-      {/* Lightbox Modal Gambar Ukuran Penuh */}
-      {previewImage && (
-        <div
-          onClick={() => setPreviewImage(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm cursor-zoom-out animate-in fade-in duration-150">
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700 cursor-default">
-            <div className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-900 border-b border-slate-800 text-white">
-              <span className="font-extrabold text-xs text-slate-200 flex items-center gap-2">
-                <Camera size={16} className="text-red-500" />
-                Bukti Foto Fisik Ban • Roda {activeSlot}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4 bg-black/50 w-full flex items-center justify-center">
-              <img
-                src={previewImage}
-                alt="Ukuran Penuh"
-                className="max-h-[70vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
-              />
-            </div>
+      {/* Lightbox Modal Gambar Reusable */}
+      <Modal
+        isOpen={Boolean(previewImage)}
+        onClose={() => setPreviewImage(null)}
+        title={`Bukti Foto Fisik Ban • Roda ${activeSlot}`}
+        size="lg">
+        {previewImage && (
+          <div className="flex items-center justify-center p-2 bg-slate-900 rounded-xl">
+            <img
+              src={previewImage}
+              alt="Ukuran Penuh"
+              className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain"
+            />
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </Modal>
+    </Container>
   );
 }

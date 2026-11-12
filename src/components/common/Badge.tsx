@@ -1,6 +1,6 @@
 // src/components/common/Badge.tsx
 import {
-  BadgeVariant,
+  type BadgeVariant,
   type BadgeProps,
 } from "@/types/components/common/commonTypes";
 

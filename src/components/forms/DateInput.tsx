@@ -1,6 +1,6 @@
 // src/components/common/DateInput.tsx
 import { Calendar } from "lucide-react";
-import { DateInputProps } from "@/types/components/common/commonTypes";
+import type { DateInputProps } from "@/types/components/forms/formsTypes";
 
 export default function DateInput({
   label,

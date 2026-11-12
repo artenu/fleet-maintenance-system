@@ -1,6 +1,6 @@
 // src/components/common/Checkbox.tsx
 import { Check } from "lucide-react";
-import type { CheckboxProps } from "@/types/components/common/commonTypes";
+import type { CheckboxProps } from "@/types/components/forms/formsTypes";
 
 export default function Checkbox({
   label,

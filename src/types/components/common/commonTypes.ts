@@ -1,10 +1,5 @@
 // src/types/common/commonTypes.ts
-import type {
-  ReactNode,
-  InputHTMLAttributes,
-  ButtonHTMLAttributes,
-  HTMLAttributes,
-} from "react";
+import type { ReactNode, ButtonHTMLAttributes, HTMLAttributes } from "react";
 import type { LucideIcon } from "lucide-react";
 
 // ================= 1. BUTTON =================
@@ -47,68 +42,6 @@ export interface BadgeProps {
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
-}
-
-// ================= 4. FORM INPUT (TEXT) =================
-export interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  subLabel?: ReactNode;
-  error?: string;
-  helperText?: string;
-  icon?: LucideIcon;
-  prefixText?: string;
-  suffixText?: string;
-}
-
-// ================= 5. NUMBER INPUT =================
-export interface NumberInputProps extends Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  "onChange" | "value"
-> {
-  label?: string;
-  subLabel?: ReactNode;
-  value: number | undefined | null;
-  onChange: (value: number) => void;
-  prefixText?: string;
-  suffixText?: string;
-  icon?: LucideIcon;
-  error?: string;
-  helperText?: string;
-  allowDecimals?: boolean;
-}
-
-// ================= 6. DATE INPUT =================
-export interface DateInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  subLabel?: ReactNode;
-  error?: string;
-  helperText?: string;
-}
-
-// ================= 7. SEARCH INPUT =================
-export interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-}
-
-// ================= 8. SEARCHABLE SELECT (COMBOBOX) =================
-export interface SearchableOption {
-  value: string;
-  label: string;
-  subLabel?: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
-export interface SearchableSelectProps {
-  options: SearchableOption[];
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  searchPlaceholder?: string;
-  disabled?: boolean;
 }
 
 // ================= 9. STAT CARD (KPI) =================
@@ -192,14 +125,5 @@ export interface SpinnerProps {
   fullPage?: boolean;
 }
 
-// ================= 13. CHECKBOX =================
-export interface CheckboxProps extends Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  "onChange" | "value"
-> {
-  label?: ReactNode;
-  subLabel?: ReactNode;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  error?: string;
-}
+// Re-export types from forms directory for backward compatibility
+export type * from "../forms/formsTypes";

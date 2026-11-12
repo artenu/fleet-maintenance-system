@@ -1,7 +1,7 @@
 // src/components/common/StatCard.tsx
 import {
-  StatCardProps,
-  StatCardVariant,
+  type StatCardProps,
+  type StatCardVariant,
 } from "@/types/components/common/commonTypes";
 
 export default function StatCard({
