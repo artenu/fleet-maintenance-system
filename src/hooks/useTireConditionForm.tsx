@@ -8,6 +8,7 @@ import type {
 } from "@/types/truck/tires";
 import type { SearchableOption } from "@/types/components/forms/formsTypes";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
+import { getWheelPositionDescription } from "@/constants/truck";
 import {
   mockCentralTruckApiResponse,
   deriveChassisTypeFromCapacity,
@@ -220,22 +221,7 @@ export function useTireConditionForm({
 
   // Label Deskripsi Roda
   const getSlotDescription = (pos: WheelPosition) => {
-    if (pos === "H1") {
-      return "Gandar 1 Depan • SISI KANAN (SUPIR 🇮🇩)";
-    }
-    if (pos === "H2") {
-      return "Gandar 1 Depan • SISI KIRI (KERNET / PENUMPANG)";
-    }
-    if (pos === "H3" || pos === "H4") {
-      return "Gandar 2 Drive • SISI KANAN (SUPIR 🇮🇩)";
-    }
-    if (pos === "H5" || pos === "H6") {
-      return "Gandar 2 Drive • SISI KIRI (KERNET)";
-    }
-    if (pos === "S1") {
-      return "Keranjang Cadangan • BAN SEREP (SPARE)";
-    }
-    return `Sasis Gandengan Trailer • Posisi ${pos}`;
+    return getWheelPositionDescription(pos);
   };
 
   // Validasi Golden Rule Kemudi Steer

@@ -1,5 +1,5 @@
 // src/views/DigitalTwinView.tsx
-import WheelLayoutVisualizer from "@/components/WheelLayoutVisualizer";
+import { WheelLayoutVisualizer } from "@/components/digitalTwin";
 import { formatThousand } from "@/utils/formatters";
 import { useDigitalTwin } from "@/hooks/useDigitalTwin";
 import type { DigitalTwinViewProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
