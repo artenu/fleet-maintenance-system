@@ -21,3 +21,5 @@ export { default as Spinner } from "./Spinner";
 export { default as Checkbox } from "../forms/Checkbox";
 export { default as Select } from "../forms/Select";
 export { default as TextArea } from "../forms/TextArea";
+export { default as RangeInput } from "../forms/RangeInput";
+export { default as FileInput } from "../forms/FileInput";

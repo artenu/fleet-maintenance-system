@@ -1,9 +1,10 @@
 import { useState } from "react";
 import Sidebar, { type TireMaintenanceView } from "./components/layout/Sidebar";
-import TireInspectionModal from "./components/TireInspectionModal";
-import TireRotationModal, {
-  type RotationResultPayload,
-} from "./components/TireRotationModal";
+import {
+  TireInspectionModal,
+  TireRotationModal,
+} from "./components/digitalTwin";
+import type { RotationResultPayload } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 // Views Terisolasi
 import DigitalTwinView from "./views/DigitalTwinView";

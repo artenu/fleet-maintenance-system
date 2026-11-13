@@ -103,3 +103,34 @@ export interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   error?: string;
   helperText?: string;
 }
+
+// ================= 16. RANGE INPUT (SLIDER) =================
+export interface RangeInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> {
+  label?: string;
+  subLabel?: ReactNode;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  valueDisplay?: ReactNode;
+  error?: string;
+  helperText?: string;
+}
+
+// ================= 17. FILE INPUT =================
+export interface FileInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "value"
+> {
+  label?: string;
+  subLabel?: ReactNode;
+  buttonText?: string;
+  icon?: LucideIcon;
+  error?: string;
+  helperText?: string;
+  capture?: "user" | "environment";
+}
