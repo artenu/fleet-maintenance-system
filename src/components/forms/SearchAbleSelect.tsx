@@ -1,7 +1,7 @@
 // src/components/common/SearchableSelect.tsx
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronDown, Check } from "lucide-react";
-import { SearchableSelectProps } from "@/types/components/common/commonTypes";
+import type { SearchableSelectProps } from "@/types/components/forms/formsTypes";
 
 export default function SearchableSelect({
   options,

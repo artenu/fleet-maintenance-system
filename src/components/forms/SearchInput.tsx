@@ -1,6 +1,6 @@
 // src/components/common/SearchInput.tsx
 import { Search, X } from "lucide-react";
-import { SearchInputProps } from "@/types/components/common/commonTypes";
+import type { SearchInputProps } from "@/types/components/forms/formsTypes";
 
 export default function SearchInput({
   value,

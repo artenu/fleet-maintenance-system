@@ -1,5 +1,5 @@
 // src/components/common/FormInput.tsx
-import { FormInputProps } from "@/types/components/common/commonTypes";
+import type { FormInputProps } from "@/types/components/forms/formsTypes";
 
 export default function FormInput({
   label,

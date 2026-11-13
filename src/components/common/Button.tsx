@@ -1,8 +1,8 @@
 // src/components/common/Button.tsx
 import {
-  ButtonProps,
-  ButtonVariant,
-  ButtonSize,
+  type ButtonProps,
+  type ButtonVariant,
+  type ButtonSize,
 } from "@/types/components/common/commonTypes";
 
 export default function Button({

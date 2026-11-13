@@ -45,7 +45,7 @@ interface TireRotationModalProps {
 
 interface FormContentProps {
   onClose: () => void;
-  sourceSlot: WheelSlotEvaluation;
+  sourceSlot: WheelSlotEvaluation & { tire: TireAsset };
   allTruckTires: TireAsset[];
   warehouseTires: TireAsset[];
   chassisType: ChassisType;
@@ -65,7 +65,7 @@ function TireRotationFormContent({
   currentOdometer,
   onExecuteRotation,
 }: FormContentProps) {
-  const sourceTire = sourceSlot.tire!;
+  const sourceTire = sourceSlot.tire;
 
   // 1. Kumpulkan daftar semua posisi roda di truk ini (kecuali posisi asal)
   // 1. Kumpulkan daftar semua posisi roda di truk ini (kecuali posisi asal)
@@ -459,7 +459,7 @@ export default function TireRotationModal({
       <TireRotationFormContent
         key={`${sourceSlot.position}-${sourceSlot.tire.id}`}
         onClose={onClose}
-        sourceSlot={sourceSlot}
+        sourceSlot={sourceSlot as WheelSlotEvaluation & { tire: TireAsset }}
         allTruckTires={allTruckTires}
         warehouseTires={warehouseTires}
         chassisType={chassisType}

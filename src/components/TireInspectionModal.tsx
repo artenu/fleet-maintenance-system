@@ -33,7 +33,7 @@ interface TireInspectionModalProps {
 
 interface FormContentProps {
   onClose: () => void;
-  slot: WheelSlotEvaluation;
+  slot: WheelSlotEvaluation & { tire: TireAsset };
   truckUnitCode: string;
   currentOdometer: number;
   onSaveInspection: (updatedTire: TireAsset, newOdometer: number) => void;
@@ -61,7 +61,7 @@ function TireInspectionFormContent({
   onSaveAndNext,
 }: FormContentProps) {
   const [isFullPreviewOpen, setIsFullPreviewOpen] = useState<boolean>(false);
-  const tire = slot.tire!;
+  const tire = slot.tire;
   const isSteer = slot.axleType === "steer";
   const initialPercent = tire.lastInspectionPercent || 75;
 
@@ -703,7 +703,7 @@ export default function TireInspectionModal({
       <TireInspectionFormContent
         key={`${slot.position}-${slot.tire.id}`}
         onClose={onClose}
-        slot={slot}
+        slot={slot as WheelSlotEvaluation & { tire: TireAsset }}
         truckUnitCode={truckUnitCode}
         currentOdometer={currentOdometer}
         onSaveInspection={onSaveInspection}

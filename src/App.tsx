@@ -12,6 +12,7 @@ import AddNewTruckView from "./views/AddNewTruckView";
 import TireHistoryView from "./views/TireHistoryView";
 import TireAnalyticsView from "./views/TireAnalyticsView";
 import TireAuditScheduleView from "./views/TireAuditScheduleView";
+import FleetHealthDashboardView from "./views/FleetHealthDashboardView";
 
 import {
   mockTruckTireList,
@@ -25,9 +26,9 @@ import {
 } from "./types/truck/tires";
 import { evaluateWheelSlot } from "./utils/tireCalculations";
 import { Truck } from "lucide-react";
-import ReceiveTireModal from "./components/ReceiveTireModal";
+import { ReceiveTireModal } from "@/components/tireInventory";
 import ToastContainer from "./components/common/Toast";
-import { ToastMessage } from "./types/components/common/commonTypes";
+import type { ToastMessage } from "./types/components/common/commonTypes";
 
 import TruckCouplingView from "./views/TruckCouplingView";
 import { mockChassisPoolList } from "./data/mockChassisPool";
@@ -54,7 +55,7 @@ export default function App() {
 
   // 1. State Navigasi & Sidebar
   const [activeView, setActiveView] =
-    useState<TireMaintenanceView>("digital-twin");
+    useState<TireMaintenanceView>("fleet-health");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   // 2. State Data Armada & Stok Gudang
@@ -122,6 +123,8 @@ export default function App() {
   // Handler Eksekusi Rotasi / Mutasi Ban
   const handleExecuteRotation = (payload: RotationResultPayload) => {
     if (payload.mode === "SWAP_POSITION" && payload.targetPosition) {
+      const targetPosition = payload.targetPosition; // 👈 1. Simpan ke variabel konstan
+
       setTruckList((prevList) =>
         prevList.map((truck) => {
           if (truck.id !== activeTruck.id) {
@@ -130,7 +133,7 @@ export default function App() {
 
           const updatedTires = truck.tires.map((t) => {
             if (t.id === payload.sourceTire.id) {
-              return { ...t, currentPosition: payload.targetPosition! };
+              return { ...t, currentPosition: targetPosition }; // 👈 Hapus tanda seru (!)
             }
             if (payload.targetTire && t.id === payload.targetTire.id) {
               return { ...t, currentPosition: payload.sourcePosition };
@@ -145,8 +148,10 @@ export default function App() {
       payload.mode === "REPLACE_FROM_WAREHOUSE" &&
       payload.warehouseTireToInstall
     ) {
+      const warehouseTire = payload.warehouseTireToInstall; // 👈 2. Simpan ke variabel konstan
+
       const newTireForTruck: TireAsset = {
-        ...payload.warehouseTireToInstall,
+        ...warehouseTire,
         currentVehicleId: activeTruck.id,
         currentPosition: payload.sourcePosition,
         installOdometer: payload.odometer,
@@ -174,7 +179,7 @@ export default function App() {
 
       setWarehouseTires((prevWH) => {
         const withoutUsed = prevWH.filter(
-          (w) => w.id !== payload.warehouseTireToInstall!.id,
+          (w) => w.id !== warehouseTire.id, // 👈 Hapus tanda seru (!)
         );
         return [...withoutUsed, tireMovedToWarehouse];
       });
@@ -407,6 +412,8 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-base font-extrabold text-slate-900 tracking-tight">
+                    {activeView === "fleet-health" &&
+                      "Executive Fleet Health Dashboard"}
                     {activeView === "digital-twin" &&
                       "Digital Twin & Visualizer Roda"}
                     {activeView === "add-truck" &&
@@ -465,6 +472,22 @@ export default function App() {
               onOpenRotation={() => setIsRotationModalOpen(true)}
               onEmergencySwapSpare={handleEmergencySwapSpare}
               onApplyMechanicOverride={handleApplyMechanicOverride}
+            />
+          )}
+
+          {activeView === "fleet-health" && (
+            <FleetHealthDashboardView
+              truckList={truckList}
+              chassisList={chassisList}
+              warehouseTires={warehouseTires}
+              onSelectTruck={(truckId) => {
+                setSelectedTruckId(truckId);
+                setActiveView("digital-twin");
+              }}
+              onNavigateCoupling={() => setActiveView("coupling")}
+              onNavigateUpdateTires={(_plate) => {
+                setActiveView("add-truck");
+              }}
             />
           )}
 

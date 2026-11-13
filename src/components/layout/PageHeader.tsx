@@ -1,6 +1,10 @@
 // src/components/layout/PageHeader.tsx
 import type { PageHeaderProps } from "@/types/components/layout/layoutTypes";
 
+interface ExtendedPageHeaderProps extends PageHeaderProps {
+  flush?: boolean;
+}
+
 export default function PageHeader({
   title,
   subtitle,
@@ -10,10 +14,15 @@ export default function PageHeader({
   iconBgColor = "bg-red-600",
   actions,
   className = "",
-}: PageHeaderProps) {
+  flush = false,
+}: ExtendedPageHeaderProps) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs ${className}`}>
+      className={
+        flush
+          ? className // Jika flush = true, tidak ada border, shadow, maupun p-6 bawaan
+          : `rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs ${className}`
+      }>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           {Icon && (

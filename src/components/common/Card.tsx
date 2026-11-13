@@ -1,6 +1,6 @@
 // src/components/common/Card.tsx
 import React from "react";
-import { CardProps } from "@/types/components/common/commonTypes";
+import { type CardProps } from "@/types/components/common/commonTypes";
 
 export function Card({ children, className = "", ...props }: CardProps) {
   return (

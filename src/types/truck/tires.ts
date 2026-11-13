@@ -85,6 +85,8 @@ export interface TireAsset {
   isMechanicOverridden?: boolean; // True jika ada toleransi +5.000 KM mekanik
   overrideReason?: string;
   overrideApprovedBy?: string;
+  purchasePrice?: number; // Nominal harga beli (Hanya tampak untuk role ADMIN / FINANCE)
+  serviceCost?: number; // Biaya jasa / vulkanisir (Hanya tampak untuk role ADMIN / FINANCE)
 }
 
 /**

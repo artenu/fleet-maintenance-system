@@ -1,7 +1,7 @@
 // src/components/common/NumberInput.tsx
 import React from "react";
 import { formatThousand, parseThousand } from "@/utils/formatters";
-import { NumberInputProps } from "@/types/components/common/commonTypes";
+import type { NumberInputProps } from "@/types/components/forms/formsTypes";
 
 export default function NumberInput({
   label,
