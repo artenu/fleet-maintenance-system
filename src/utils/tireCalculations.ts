@@ -127,7 +127,9 @@ export function calculateCpk(
   purchasePrice: number,
   totalKmAchieved: number,
 ): number {
-  if (!totalKmAchieved || totalKmAchieved <= 0) {return 0;}
+  if (!totalKmAchieved || totalKmAchieved <= 0) {
+    return 0;
+  }
   return Math.round((purchasePrice / totalKmAchieved) * 100) / 100;
 }
 
@@ -136,7 +138,9 @@ export function calculateCpk(
  * Contoh: 76890035 meter -> 76.890 KM
  */
 export function convertIotOdometerMeterToKm(meterValue: number): number {
-  if (!meterValue || Number.isNaN(meterValue)) {return 0;}
+  if (!meterValue || Number.isNaN(meterValue)) {
+    return 0;
+  }
   return Math.round(meterValue / 1000);
 }
 

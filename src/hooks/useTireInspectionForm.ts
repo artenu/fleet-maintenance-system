@@ -7,26 +7,15 @@ import type {
 } from "@/types/truck/tires";
 import type { UseTireInspectionFormProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
+import {
+  STANDARD_BRANDS,
+  VISUAL_DAMAGE_OPTIONS,
+  checkHasSevereDamage,
+  INSPECTION_THRESHOLDS,
+} from "@/constants/digitalTwin";
 
-export const STANDARD_BRANDS = [
-  "Super Grip / MI RFD",
-  "PT Boxer (Karet Medan)",
-  "Bridgestone",
-  "Michelin",
-  "Giti",
-  "Gajah Tunggal",
-  "Dunlop",
-  "Lainnya",
-];
-
-export const VISUAL_DAMAGE_OPTIONS = [
-  "Benjol / Bulge (Dinding Ban)",
-  "Sobek Dinding Samping",
-  "Kawat Baja Terbuka",
-  "Aus Tidak Rata (Camber/Toe)",
-  "Tertusuk Paku / Bocor Halus",
-  "Retak Rambut (Ozone / Cuaca)",
-];
+// Re-export untuk backward-compatibility
+export { STANDARD_BRANDS, VISUAL_DAMAGE_OPTIONS };
 
 /**
  * Custom hook untuk mengelola state, perhitungan validasi teknis, dan foto bukti inspeksi ban lapangan
@@ -38,7 +27,9 @@ export function useTireInspectionForm({
 }: UseTireInspectionFormProps) {
   const [isFullPreviewOpen, setIsFullPreviewOpen] = useState<boolean>(false);
   const isSteer = axleType === "steer";
-  const initialPercent = tire.lastInspectionPercent || 75;
+  const initialPercent =
+    tire.lastInspectionPercent ||
+    INSPECTION_THRESHOLDS.DEFAULT_INITIAL_PERCENT;
 
   // State Formulir Inspeksi Lapangan
   const [serialNumber, setSerialNumber] = useState<string>(tire.serialNumber);
@@ -49,7 +40,7 @@ export function useTireInspectionForm({
   );
   const [odometer, setOdometer] = useState<number>(currentOdometer);
   const [pressurePsi, setPressurePsi] = useState<number>(
-    tire.pressurePsi || 115,
+    tire.pressurePsi || INSPECTION_THRESHOLDS.DEFAULT_PRESSURE_PSI,
   );
   const [treadDepthMm, setTreadDepthMm] = useState<number>(
     tire.treadDepthMm || Math.max(2, Math.round((initialPercent / 100) * 15)),
@@ -62,7 +53,9 @@ export function useTireInspectionForm({
   const [actionRecommendation, setActionRecommendation] =
     useState<ActionRecommendation>(
       tire.actionRecommendation ||
-        (initialPercent < 40 ? "REPLACE_SERVICE" : "KEEP"),
+        (initialPercent < INSPECTION_THRESHOLDS.CRITICAL_PHYSICAL_PERCENT
+          ? "REPLACE_SERVICE"
+          : "KEEP"),
     );
   const [notes, setNotes] = useState<string>(tire.inspectionNotes || "");
   const [photoPreview, setPhotoPreview] = useState<string | null>(
@@ -90,13 +83,12 @@ export function useTireInspectionForm({
     }
   };
 
-  const hasSevereDamage =
-    visualDamages.includes("Benjol / Bulge (Dinding Ban)") ||
-    visualDamages.includes("Sobek Dinding Samping") ||
-    visualDamages.includes("Kawat Baja Terbuka");
+  const hasSevereDamage = checkHasSevereDamage(visualDamages);
 
   // Golden Rule #5: Fisik < 40% langsung CRITICAL
-  const isPhysicalCritical = physicalPercent < 40 || hasSevereDamage;
+  const isPhysicalCritical =
+    physicalPercent < INSPECTION_THRESHOLDS.CRITICAL_PHYSICAL_PERCENT ||
+    hasSevereDamage;
 
   // Golden Rule #1: Steer wajib R0 atau R1
   const isSteerViolation =
@@ -105,7 +97,9 @@ export function useTireInspectionForm({
   const liveStatus: "CRITICAL" | "WARNING" | "GOOD" =
     isSteerViolation || isPhysicalCritical
       ? "CRITICAL"
-      : physicalPercent < 70 || pressurePsi < 95 || pressurePsi > 130
+      : physicalPercent < INSPECTION_THRESHOLDS.WARNING_PHYSICAL_PERCENT ||
+          pressurePsi < INSPECTION_THRESHOLDS.MIN_PRESSURE_PSI ||
+          pressurePsi > INSPECTION_THRESHOLDS.MAX_PRESSURE_PSI
         ? "WARNING"
         : "GOOD";
 

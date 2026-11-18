@@ -5,14 +5,22 @@ import type {
   WheelSlotEvaluation,
   TireAsset,
   ChassisType,
+  RetreadStatus,
+  ActionRecommendation,
 } from "@/types/truck/tires";
+import type { ChassisTrailerAsset } from "@/types/truck/tires";
+import type { ChangeEvent } from "react";
 
 /**
  * Prop interface untuk komponen DigitalTwinView
  */
 export interface DigitalTwinViewProps {
   activeTruck: TruckFleetTireItem;
+  chassisList?: ChassisTrailerAsset[];
+  truckList?: TruckFleetTireItem[];
+  warehouseTires?: TireAsset[];
   selectedSlot: WheelSlotEvaluation | null;
+  onSelectTruck?: (truckId: string) => void;
   onSelectSlot: (slot: WheelSlotEvaluation | null) => void;
   onOpenInspection: () => void;
   onOpenRotation: () => void;
@@ -22,6 +30,8 @@ export interface DigitalTwinViewProps {
     mechanicName: string,
     reason: string,
   ) => void;
+  onSaveTruckTires?: (updatedTruck: TruckFleetTireItem) => void;
+  onInstallTire?: (position: WheelPosition, newTire: TireAsset) => void;
 }
 
 /**
@@ -66,6 +76,23 @@ export interface PhotoPreviewState {
   title: string;
   subtitle?: string;
   inspector?: string;
+}
+
+export interface DigitalTwinViewProps {
+  activeTruck: TruckFleetTireItem;
+  chassisList?: ChassisTrailerAsset[];
+  warehouseTires?: TireAsset[]; // 👈 Tambahkan ini
+  selectedSlot: WheelSlotEvaluation | null;
+  onSelectSlot: (slot: WheelSlotEvaluation | null) => void;
+  onOpenInspection: () => void;
+  onOpenRotation: () => void;
+  onEmergencySwapSpare: (position: WheelPosition) => void;
+  onApplyMechanicOverride: (
+    position: WheelPosition,
+    mechanicName: string,
+    reason: string,
+  ) => void;
+  onInstallTire?: (position: WheelPosition, newTire: TireAsset) => void; // 👈 Tambahkan ini
 }
 
 /**
@@ -161,6 +188,8 @@ export interface WheelLayoutVisualizerProps {
   plateNumber: string;
   currentOdometer: number;
   initialChassisType?: ChassisType;
+  chassisLengthCategory?: "20FT" | "40FT";
+  isBobTail?: boolean;
   tires: TireAsset[];
   onSelectSlot?: (slot: WheelSlotEvaluation) => void;
 }
@@ -173,4 +202,258 @@ export interface WheelItemProps {
   slot: WheelSlotEvaluation;
   isSelected: boolean;
   onSlotClick: (slot: WheelSlotEvaluation) => void;
+}
+
+/**
+ * Props untuk subkomponen WheelLayoutToolbar
+ */
+export interface WheelLayoutToolbarProps {
+  unitCode: string;
+  plateNumber: string;
+  currentOdometer: number;
+  totalTiresCount: number;
+  chassisType: ChassisType;
+  chassisLengthCategory?: "20FT" | "40FT";
+  isBobTail?: boolean;
+  onChangeChassisType: (type: ChassisType) => void;
+}
+
+/**
+ * Props untuk subkomponen WheelLayoutSummaryBanner
+ */
+export interface WheelLayoutSummaryBannerProps {
+  criticalCount: number;
+}
+
+/**
+ * Props untuk subkomponen DualWheelPair
+ */
+export interface DualWheelPairProps {
+  outerPos: WheelPosition;
+  innerPos: WheelPosition;
+  isRightSide?: boolean;
+  tireMap: Map<WheelPosition, TireAsset>;
+  getSlot: (pos: WheelPosition) => WheelSlotEvaluation;
+  selectedPosition: WheelPosition | null;
+  onSlotClick: (slot: WheelSlotEvaluation) => void;
+}
+
+/**
+ * Props untuk subkomponen TractorHeadSection
+ */
+export interface TractorHeadSectionProps {
+  tireMap: Map<WheelPosition, TireAsset>;
+  getSlot: (pos: WheelPosition) => WheelSlotEvaluation;
+  selectedPosition: WheelPosition | null;
+  onSlotClick: (slot: WheelSlotEvaluation) => void;
+}
+
+/**
+ * Props untuk subkomponen TrailerChassisSection
+ */
+export interface TrailerChassisSectionProps {
+  chassisType: ChassisType;
+  tireMap: Map<WheelPosition, TireAsset>;
+  getSlot: (pos: WheelPosition) => WheelSlotEvaluation;
+  selectedPosition: WheelPosition | null;
+  onSlotClick: (slot: WheelSlotEvaluation) => void;
+}
+
+/**
+ * Props untuk komponen FleetReadinessBanner
+ */
+export interface FleetReadinessBannerProps {
+  unitCode: string;
+  plateNumber: string;
+  isGrounded: boolean;
+  criticalTiresCount: number;
+  readinessPercent: number;
+  attachedChassisCode?: string;
+  chassisType?: ChassisType;
+  hasNoTires?: boolean;
+  isBobTail?: boolean;
+  chassisLengthCategory?: "20FT" | "40FT";
+}
+
+/**
+ * Props untuk komponen DigitalTwinMetrics
+ */
+export interface DigitalTwinMetricsProps {
+  activeTruck: TruckFleetTireItem;
+}
+
+/**
+ * Props untuk komponen SelectedWheelDetailCard
+ */
+export interface SelectedWheelDetailCardProps {
+  selectedSlot: WheelSlotEvaluation | null;
+  onOpenInspection: () => void;
+  onOpenRotation: () => void;
+  onQuickSwapSpare: () => void;
+  onOpenOverrideModal: () => void;
+  onPreviewPhoto: (state: PhotoPreviewState) => void;
+  onOpenInstallTire?: () => void;
+}
+
+/**
+ * Props untuk modal toleransi mekanik (+5.000 KM)
+ */
+export interface MechanicOverrideModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  mechanicName: string;
+  onChangeMechanicName: (name: string) => void;
+  overrideReason: string;
+  onChangeOverrideReason: (reason: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+/**
+ * Props untuk subkomponen InspectionStatusHeader
+ */
+export interface InspectionStatusHeaderProps {
+  liveStatus: "CRITICAL" | "WARNING" | "GOOD";
+  axleType: string;
+  kmElapsed: number;
+  pressurePsi: number;
+  isSteerViolation: boolean;
+  isPhysicalCritical: boolean;
+  position: WheelPosition;
+  retreadStatus: RetreadStatus;
+}
+
+/**
+ * Props untuk subkomponen InspectionIdentitySection
+ */
+export interface InspectionIdentitySectionProps {
+  serialNumber: string;
+  onChangeSerialNumber: (val: string) => void;
+  brand: string;
+  onChangeBrand: (val: string) => void;
+  customBrand: string;
+  onChangeCustomBrand: (val: string) => void;
+  retreadStatus: RetreadStatus;
+  onChangeRetreadStatus: (val: RetreadStatus) => void;
+  isSteer: boolean;
+}
+
+/**
+ * Props untuk subkomponen InspectionMeasurementsSection
+ */
+export interface InspectionMeasurementsSectionProps {
+  odometer: number;
+  onChangeOdometer: (val: number) => void;
+  pressurePsi: number;
+  onChangePressurePsi: (val: number) => void;
+  treadDepthMm: number;
+  onChangeTreadDepthMm: (val: number) => void;
+  physicalPercent: number;
+  onChangePhysicalPercent: (val: number) => void;
+}
+
+/**
+ * Props untuk subkomponen InspectionDamageSection
+ */
+export interface InspectionDamageSectionProps {
+  visualDamages: string[];
+  onToggleDamage: (damage: string) => void;
+}
+
+/**
+ * Props untuk subkomponen InspectionPhotoSection
+ */
+export interface InspectionPhotoSectionProps {
+  photoPreview: string | null;
+  onPhotoCapture: (e: ChangeEvent<HTMLInputElement>) => void;
+  onDeletePhoto: () => void;
+  onOpenFullPreview: () => void;
+  isFullPreviewOpen: boolean;
+  onCloseFullPreview: () => void;
+  serialNumber: string;
+}
+
+/**
+ * Props untuk subkomponen InspectionRecommendationSection
+ */
+export interface InspectionRecommendationSectionProps {
+  actionRecommendation: ActionRecommendation;
+  onChangeActionRecommendation: (val: ActionRecommendation) => void;
+  notes: string;
+  onChangeNotes: (val: string) => void;
+}
+
+/**
+ * Props untuk subkomponen SourceTireInfoCard
+ */
+export interface SourceTireInfoCardProps {
+  sourceTire: TireAsset;
+}
+
+/**
+ * Props untuk subkomponen RotationModeToggle
+ */
+export interface RotationModeToggleProps {
+  mode: RotationMode;
+  onChangeMode: (mode: RotationMode) => void;
+}
+
+/**
+ * Props untuk subkomponen SwapPositionSection
+ */
+export interface SwapPositionSectionProps {
+  targetPosition: WheelPosition;
+  onChangeTargetPosition: (pos: WheelPosition) => void;
+  targetPositionOptions: { value: string; label: string }[];
+  targetTire: TireAsset | null;
+  sourcePosition: WheelPosition;
+}
+
+/**
+ * Props untuk subkomponen WarehouseReplaceSection
+ */
+export interface WarehouseReplaceSectionProps {
+  sourcePosition: WheelPosition;
+  sourceTireSerialNumber: string;
+  warehouseTireId: string;
+  onChangeWarehouseTireId: (id: string) => void;
+  warehouseTireOptions: { value: string; label: string }[];
+  sourceDestination: SourceTireDestination;
+  onChangeSourceDestination: (dest: SourceTireDestination) => void;
+}
+
+/**
+ * Props untuk subkomponen WheelSlotHeader
+ */
+export interface WheelSlotHeaderProps {
+  slot: WheelSlotEvaluation;
+}
+
+/**
+ * Props untuk subkomponen WheelTireSpecsList
+ */
+export interface WheelTireSpecsListProps {
+  slot: WheelSlotEvaluation;
+  tire: TireAsset;
+}
+
+/**
+ * Props untuk subkomponen WheelPhotoEvidence
+ */
+export interface WheelPhotoEvidenceProps {
+  slot: WheelSlotEvaluation;
+  tire: TireAsset;
+  onPreviewPhoto: (state: PhotoPreviewState) => void;
+  onOpenInspection: () => void;
+}
+
+/**
+ * Props untuk subkomponen WheelActionButtons
+ */
+export interface WheelActionButtonsProps {
+  slot: WheelSlotEvaluation;
+  onOpenInspection: () => void;
+  onOpenRotation: () => void;
+  onQuickSwapSpare: () => void;
+  onOpenOverrideModal: () => void;
+  onOpenInstallTire?: () => void;
 }

@@ -10,6 +10,14 @@ import type { SearchableOption } from "@/types/components/forms/formsTypes";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 import { getWheelPositionDescription } from "@/constants/truck";
 import {
+  DEFAULT_FALLBACK_CHASSIS_CODE,
+  DEFAULT_FALLBACK_ODOMETER,
+  getWheelPositionsByChassisType,
+  INITIAL_TIRES_DATA,
+  getDefaultTireInputForSlot,
+  DEFAULT_COMPILED_TIRE_FALLBACK,
+} from "@/constants/addNewTruck";
+import {
   mockCentralTruckApiResponse,
   deriveChassisTypeFromCapacity,
 } from "@/data/MockCentralTruckApi";
@@ -21,6 +29,7 @@ import type {
 
 export function useTireConditionForm({
   existingTrucks = [],
+  chassisList = [],
   onSaveNewTruck,
 }: UseTireConditionFormProps) {
   // 1. Deteksi unit truk baru dari database sebelah yang belum didaftarkan bannya di FMS
@@ -44,7 +53,7 @@ export function useTireConditionForm({
   );
   const [unitCode, setUnitCode] = useState<string>(defaultTruck.unitCode);
   const [chassisCode, setChassisCode] = useState<string>(
-    defaultTruck.currentChassisCode || "CHS-018",
+    defaultTruck.currentChassisCode || DEFAULT_FALLBACK_CHASSIS_CODE,
   );
   const [truckBrand, setTruckBrand] = useState<string>(
     `${defaultTruck.brand} ${defaultTruck.type}`,
@@ -53,7 +62,7 @@ export function useTireConditionForm({
     deriveChassisTypeFromCapacity(defaultTruck.capacity),
   );
   const [odometer, setOdometer] = useState<number>(
-    getOdometerKmByVin(defaultTruck.vin, 76890),
+    getOdometerKmByVin(defaultTruck.vin, DEFAULT_FALLBACK_ODOMETER),
   );
   const [driverName, setDriverName] = useState<string>(
     defaultTruck.defaultDriver,
@@ -93,76 +102,82 @@ export function useTireConditionForm({
 
   // Daftar Posisi Roda Sesuai Sasis (14 atau 18 Roda)
   const wheelPositions = useMemo<WheelPosition[]>(() => {
-    return [
-      "H1",
-      "H2",
-      "H3",
-      "H4",
-      "H5",
-      "H6",
-      "C1",
-      "C2",
-      "C3",
-      "C4",
-      "C5",
-      "C6",
-      "C7",
-      "C8",
-      ...(chassisType === "3_AXLE"
-        ? (["C9", "C10", "C11", "C12"] as WheelPosition[])
-        : []),
-      "S1",
-    ];
+    return getWheelPositionsByChassisType(chassisType);
   }, [chassisType]);
 
   // Handler Ganti Nomor Polisi
   const handleSelectPlateNumber = (selectedPlate: string) => {
+    const existing = existingTrucks.find(
+      (t) => t.plateNumber === selectedPlate,
+    );
     const target = mockCentralTruckApiResponse.find(
       (t) => t.plateNumber === selectedPlate,
     );
-    if (target) {
+
+    // Cari sasis yang sedang aktif digandeng oleh unit ini
+    const truckId = existing ? existing.id : target?.unitCode;
+    const activeChassis = chassisList.find((c) => c.attachedHeadId === truckId);
+
+    if (existing) {
+      setPlateNumber(existing.plateNumber);
+      setUnitCode(existing.unitCode);
+      setChassisCode(
+        activeChassis ? activeChassis.chassisCode : `CHS-${existing.unitCode}`,
+      );
+      setTruckBrand(existing.brand);
+      setChassisType(activeChassis ? activeChassis.type : existing.chassisType);
+      setDriverName(existing.driver);
+      setOdometer(existing.currentOdometer);
+      setActiveSlot("H1");
+
+      // 👇 SINKRONISASI: Muat data ban yang sudah ada di truk ini
+      if (existing.tires && existing.tires.length > 0) {
+        const loadedTires: Record<string, TireInputData> = {};
+        existing.tires.forEach((t) => {
+          loadedTires[t.currentPosition] = {
+            serialNumber: t.serialNumber,
+            brand: t.brand,
+            pattern: "Standar",
+            retreadStatus: t.retreadStatus,
+            pressurePsi: t.pressurePsi || 120,
+            treadDepthMm: t.treadDepthMm || 14,
+            physicalPercent: t.lastInspectionPercent || 85,
+            damages: t.visualDamages || ["Normal"],
+            photoUrl: t.photoEvidenceUrl || null,
+          };
+        });
+        setTiresData(loadedTires);
+      }
+    } else if (target) {
       setPlateNumber(target.plateNumber);
       setUnitCode(target.unitCode);
-      setChassisCode(target.currentChassisCode || `CHS-${target.unitCode}`);
+      setChassisCode(
+        activeChassis
+          ? activeChassis.chassisCode
+          : target.currentChassisCode || `CHS-${target.unitCode}`,
+      );
       setTruckBrand(`${target.brand} ${target.type}`);
-      setChassisType(deriveChassisTypeFromCapacity(target.capacity));
+      setChassisType(
+        activeChassis
+          ? activeChassis.type
+          : deriveChassisTypeFromCapacity(target.capacity),
+      );
       setDriverName(target.defaultDriver);
-      setOdometer(getOdometerKmByVin(target.vin, 76890));
+      setOdometer(getOdometerKmByVin(target.vin, DEFAULT_FALLBACK_ODOMETER));
       setActiveSlot("H1");
     }
   };
 
   // State Data Ban Per Roda
-  const [tiresData, setTiresData] = useState<Record<string, TireInputData>>({
-    H1: {
-      serialNumber: "BS-2024-9988",
-      brand: "Bridgestone",
-      pattern: "R168",
-      retreadStatus: "R0",
-      pressurePsi: 110,
-      treadDepthMm: 8.5,
-      physicalPercent: 65,
-      damages: ["Normal"],
-      photoUrl:
-        "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=600&q=80",
-    },
-  });
+  const [tiresData, setTiresData] =
+    useState<Record<string, TireInputData>>(INITIAL_TIRES_DATA);
 
   // Modal Lightbox Foto
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Form Ban Posisi Aktif
-  const currentTireForm: TireInputData = tiresData[activeSlot] || {
-    serialNumber: "",
-    brand: "Bridgestone",
-    pattern: "R168",
-    retreadStatus: activeSlot === "H1" || activeSlot === "H2" ? "R0" : "R1",
-    pressurePsi: 110,
-    treadDepthMm: 14.0,
-    physicalPercent: 90,
-    damages: ["Normal"],
-    photoUrl: null,
-  };
+  const currentTireForm: TireInputData =
+    tiresData[activeSlot] || getDefaultTireInputForSlot(activeSlot);
 
   // Helper update data ban
   const updateCurrentTire = (patch: Partial<TireInputData>) => {
@@ -237,13 +252,13 @@ export function useTireConditionForm({
     const compiledTires: TireAsset[] = wheelPositions.map((pos, idx) => {
       const data = tiresData[pos] || {
         serialNumber: `SN-${unitCode}-${pos}`,
-        brand: "Super Grip / MI RFD",
-        pattern: "Standar",
+        brand: DEFAULT_COMPILED_TIRE_FALLBACK.brand,
+        pattern: DEFAULT_COMPILED_TIRE_FALLBACK.pattern,
         retreadStatus: pos === "H1" || pos === "H2" ? "R0" : "R1",
-        pressurePsi: 115,
-        treadDepthMm: 12.0,
-        physicalPercent: 80,
-        damages: ["Normal"],
+        pressurePsi: DEFAULT_COMPILED_TIRE_FALLBACK.pressurePsi,
+        treadDepthMm: DEFAULT_COMPILED_TIRE_FALLBACK.treadDepthMm,
+        physicalPercent: DEFAULT_COMPILED_TIRE_FALLBACK.physicalPercent,
+        damages: DEFAULT_COMPILED_TIRE_FALLBACK.damages,
         photoUrl: null,
       };
 
@@ -252,7 +267,7 @@ export function useTireConditionForm({
         serialNumber: data.serialNumber || `SN-${unitCode}-${pos}`,
         brand:
           `${data.brand} ${data.pattern ? `/ ${data.pattern}` : ""}`.trim(),
-        size: "10.00-20 16PR",
+        size: DEFAULT_COMPILED_TIRE_FALLBACK.size,
         retreadStatus: data.retreadStatus,
         currentVehicleId: unitCode,
         currentPosition: pos,

@@ -6,56 +6,20 @@ import type {
   SourceTireDestination,
   UseTireRotationFormProps,
 } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
+import {
+  ROTATION_REASON_OPTIONS,
+  SOURCE_DESTINATION_OPTIONS,
+  BASE_WHEEL_POSITIONS,
+  EXTRA_3AXLE_WHEEL_POSITIONS,
+  DEFAULT_ROTATION_MECHANIC_PIC,
+} from "@/constants/digitalTwin";
 
-export const ROTATION_REASON_OPTIONS = [
-  {
-    value: "Rotasi Rutin Keausan Gandar",
-    label: "Rotasi Rutin Keausan Gandar",
-  },
-  {
-    value: "Aus Steer Dipindah ke Trailer",
-    label: "Aus Steer Dipindah ke Trailer",
-  },
-  {
-    value: "Ban Bocor / Rusak Fisik",
-    label: "Ban Bocor / Rusak Fisik",
-  },
-  {
-    value: "Kirim ke Rekanan Vulkanisir",
-    label: "Kirim ke Rekanan Vulkanisir",
-  },
-  {
-    value: "Afkir & Pasang Ban Baru Gudang",
-    label: "Afkir & Pasang Ban Baru Gudang",
-  },
-];
-
-export const SOURCE_DESTINATION_OPTIONS: {
-  id: SourceTireDestination;
-  label: string;
-}[] = [
-  { id: "GUDANG", label: "Simpan di Gudang" },
-  { id: "VULKANISIR", label: "Vendor Vulkanisir" },
-  { id: "AFKIR", label: "Afkirkan (Scrap)" },
-];
-
-const BASE_WHEEL_POSITIONS: WheelPosition[] = [
-  "H1",
-  "H2",
-  "H3",
-  "H4",
-  "H5",
-  "H6",
-  "S1",
-  "C1",
-  "C2",
-  "C3",
-  "C4",
-  "C5",
-  "C6",
-  "C7",
-  "C8",
-];
+// Re-export untuk backward-compatibility
+export {
+  ROTATION_REASON_OPTIONS,
+  SOURCE_DESTINATION_OPTIONS,
+  BASE_WHEEL_POSITIONS,
+};
 
 export function useTireRotationForm({
   sourceSlot,
@@ -72,7 +36,7 @@ export function useTireRotationForm({
   const availableTargetPositions: WheelPosition[] = useMemo(() => {
     const allPositions: WheelPosition[] =
       chassisType === "3_AXLE"
-        ? [...BASE_WHEEL_POSITIONS, "C9", "C10", "C11", "C12"]
+        ? [...BASE_WHEEL_POSITIONS, ...EXTRA_3AXLE_WHEEL_POSITIONS]
         : BASE_WHEEL_POSITIONS;
 
     return allPositions.filter((p) => p !== sourceSlot.position);
@@ -90,7 +54,7 @@ export function useTireRotationForm({
     useState<SourceTireDestination>("GUDANG");
   const [reason, setReason] = useState<string>(ROTATION_REASON_OPTIONS[0].value);
   const [mechanicPic, setMechanicPic] = useState<string>(
-    "Slamet Riyadi (Mekanik)",
+    DEFAULT_ROTATION_MECHANIC_PIC,
   );
 
   // Cari ban yang saat ini terpasang di posisi target (jika ada)

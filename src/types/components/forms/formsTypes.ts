@@ -2,6 +2,7 @@ import type {
   InputHTMLAttributes,
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
+  ChangeEvent,
   ReactNode,
 } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -50,23 +51,9 @@ export interface SearchInputProps {
   className?: string;
 }
 
-// ================= 8. SEARCHABLE SELECT (COMBOBOX) =================
-export interface SearchableOption {
-  value: string;
-  label: string;
-  subLabel?: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
-export interface SearchableSelectProps {
-  options: SearchableOption[];
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  searchPlaceholder?: string;
-  disabled?: boolean;
-}
+// ================= 8. SEARCHABLE SELECT (ALIAS) =================
+export type SearchableOption = SelectOption;
+export type SearchableSelectProps = SelectProps;
 
 // ================= 13. CHECKBOX =================
 export interface CheckboxProps extends Omit<
@@ -80,20 +67,40 @@ export interface CheckboxProps extends Omit<
   error?: string;
 }
 
-// ================= 14. SELECT =================
+// ================= 14. SELECT SEARCHABLE =================
 export interface SelectOption {
   value: string;
   label: string;
+  subLabel?: string;
+  badge?: string;
+  badgeColor?: string;
   disabled?: boolean;
 }
 
-export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectChangeEvent {
+  target: {
+    value: string;
+    name?: string;
+  };
+}
+
+export interface SelectProps extends Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  "onChange"
+> {
   label?: string;
   subLabel?: ReactNode;
   error?: string;
   helperText?: string;
   icon?: LucideIcon;
   options?: SelectOption[];
+  onChange?: (
+    event: ChangeEvent<HTMLSelectElement> | SelectChangeEvent,
+  ) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  emptyText?: string;
+  isSearchable?: boolean;
 }
 
 // ================= 15. TEXTAREA =================

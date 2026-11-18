@@ -174,3 +174,17 @@ export const WHEEL_LAYOUT_CONFIG = {
     },
   },
 };
+
+/**
+ * Pilihan opsi konfigurasi sumbu sasis trailer armada
+ */
+export const CHASSIS_CONFIG_OPTIONS = [
+  {
+    value: "2_AXLE",
+    label: "2 Sumbu • 14 Ban (Trailer 20ft / 40ft Pendek)",
+  },
+  {
+    value: "3_AXLE",
+    label: "3 Sumbu • 18 Ban (Trailer 40ft Standar)",
+  },
+];

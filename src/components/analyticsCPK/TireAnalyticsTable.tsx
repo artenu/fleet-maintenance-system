@@ -7,7 +7,6 @@ import type {
 // 🧱 Komponen Reusable Design System
 import {
   Card,
-  Badge,
   Table,
   TableHeader,
   TableBody,
@@ -16,15 +15,14 @@ import {
   TableCell,
 } from "@/components/common";
 import { SearchInput, Select } from "@/components/forms";
-
 import {
-  Filter,
-  ArrowUpDown,
-  Zap,
-  Award,
-  ShieldCheck,
-  Lightbulb,
-} from "lucide-react";
+  CPK_TIER_FILTER_OPTIONS,
+  CPK_SORT_OPTIONS,
+  getCPKTierBadge,
+  getCPKEfficiencyBadge,
+} from "@/constants/analyticsCPK";
+
+import { Filter, ArrowUpDown, Zap, Lightbulb } from "lucide-react";
 
 /**
  * Komponen Tabel Analitik Performa Merk & CPK (Cost Per Kilometer)
@@ -39,40 +37,6 @@ export default function TireAnalyticsTable({
   sortBy,
   onSortByChange,
 }: TireAnalyticsTableProps) {
-  const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case "TIER_1":
-        return <Badge variant="info">Tier 1 (Premium)</Badge>;
-      case "TIER_2":
-        return <Badge variant="neutral">Tier 2 (Standard)</Badge>;
-      default:
-        return <Badge variant="warning">Tier 3 (Budget)</Badge>;
-    }
-  };
-
-  const getEfficiencyBadge = (rating: string) => {
-    switch (rating) {
-      case "EXCELLENT":
-        return (
-          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-[11px]">
-            <Award size={12} /> Sangat Efisien
-          </span>
-        );
-      case "GOOD":
-        return (
-          <span className="inline-flex items-center gap-1 font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 text-[11px]">
-            <ShieldCheck size={12} /> Optimal
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-[11px]">
-            Standar
-          </span>
-        );
-    }
-  };
-
   return (
     <Card className="space-y-4">
       {/* Toolbar Header, Search, Filter Tier, and Sort */}
@@ -102,11 +66,7 @@ export default function TireAnalyticsTable({
               icon={Filter}
               value={tierFilter}
               onChange={(e) => onTierFilterChange(e.target.value)}
-              options={[
-                { value: "ALL", label: "Semua Tier" },
-                { value: "TIER_1", label: "Tier 1 (Premium)" },
-                { value: "TIER_2", label: "Tier 2 (Standard)" },
-              ]}
+              options={CPK_TIER_FILTER_OPTIONS}
             />
           </div>
 
@@ -118,11 +78,7 @@ export default function TireAnalyticsTable({
               onChange={(e) =>
                 onSortByChange(e.target.value as AnalyticsSortBy)
               }
-              options={[
-                { value: "CPK_ASC", label: "CPK Terendah (Paling Efisien)" },
-                { value: "KM_DESC", label: "Jarak Tempuh Tertinggi" },
-                { value: "PRICE_ASC", label: "Harga Pembelian Termurah" },
-              ]}
+              options={CPK_SORT_OPTIONS}
             />
           </div>
         </div>
@@ -148,7 +104,7 @@ export default function TireAnalyticsTable({
                 <TableCell className="font-black text-slate-900 tracking-wide">
                   {item.brandName}
                 </TableCell>
-                <TableCell>{getTierBadge(item.tier)}</TableCell>
+                <TableCell>{getCPKTierBadge(item.tier)}</TableCell>
                 <TableCell className="font-semibold text-slate-700">
                   Rp {item.standardPrice.toLocaleString("id-ID")}
                 </TableCell>
@@ -165,7 +121,7 @@ export default function TireAnalyticsTable({
                   {item.recommendedAxle}
                 </TableCell>
                 <TableCell className="text-right">
-                  {getEfficiencyBadge(item.efficiencyRating)}
+                  {getCPKEfficiencyBadge(item.efficiencyRating)}
                 </TableCell>
               </TableRow>
             ))

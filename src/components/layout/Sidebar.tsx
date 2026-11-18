@@ -38,6 +38,7 @@ interface SidebarProps {
   onSelectView: (view: TireMaintenanceView) => void;
   overdueCount?: number;
   isCollapsed: boolean;
+  incompleteTiresTruckCount?: number;
   onToggleCollapse: () => void;
 }
 
@@ -45,6 +46,7 @@ export default function Sidebar({
   activeView,
   onSelectView,
   overdueCount = 1,
+  incompleteTiresTruckCount = 0,
   isCollapsed,
   onToggleCollapse,
 }: SidebarProps) {
@@ -65,8 +67,10 @@ export default function Sidebar({
       id: "digital-twin",
       label: "Digital Twin Armada",
       icon: Disc,
-      badge: "Live",
-      badgeColor: "bg-emerald-100 text-emerald-700",
+      badgeColor:
+        incompleteTiresTruckCount > 0
+          ? "bg-amber-100 text-amber-800 font-extrabold border border-amber-300 animate-pulse"
+          : "bg-emerald-100 text-emerald-700",
     },
     {
       id: "add-truck",
@@ -233,32 +237,24 @@ export default function Sidebar({
                       ? "bg-blue-600 text-white shadow-xs"
                       : "text-slate-600 hover:bg-blue-50 hover:text-blue-900"
                   }`}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center text-start gap-2">
                     <Link2 size={15} />
                     <span>Perangkaian Sasis (Coupling)</span>
                   </div>
-                  <span
-                    className={`rounded px-1.5 py-0.2 text-[9px] font-black uppercase ${
-                      activeView === "coupling"
-                        ? "bg-white/20 text-white"
-                        : "bg-blue-100 text-blue-800"
-                    }`}>
-                    Drop & Hook
-                  </span>
                 </button>
 
                 {/* Form Inspeksi Fisik Truk PT ALN (Pilar 3) */}
                 <button
                   type="button"
-                  onClick={() =>
-                    alert(
-                      "Modul Digitalisasi Form Inspeksi Fisik PT ALN siap dikerjakan di Pilar 3!",
-                    )
-                  }
-                  className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 font-bold text-xs text-slate-400 hover:bg-slate-50 hover:text-slate-700 transition">
+                  onClick={() => onSelectView("vehicle-inspection")}
+                  className={`w-full flex items-center justify-between rounded-xl px-2.5 py-2 font-bold text-xs transition ${
+                    activeView === "vehicle-inspection"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "text-slate-600 hover:bg-blue-50 hover:text-blue-900"
+                  }`}>
                   <div className="flex items-center gap-2">
                     <ClipboardCheck size={15} />
-                    <span>Inspeksi Fisik Truk</span>
+                    <span>Inspeksi Form Surveyor</span>
                   </div>
                   <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">
                     Pilar 3
@@ -278,10 +274,14 @@ export default function Sidebar({
                 }
                 setIsTireMenuOpen((prev) => !prev);
               }}
-              className={`w-full flex items-center justify-between rounded-xl px-3 py-2 font-bold text-xs transition select-none ${
-                tireSubMenus.some((m) => m.id === activeView)
-                  ? "bg-red-50/80 text-red-900 border border-red-200"
-                  : "text-slate-700 hover:bg-slate-50"
+              className={`w-full relative flex items-center justify-between rounded-xl px-3 py-2 font-bold text-xs transition select-none ${
+                incompleteTiresTruckCount > 0
+                  ? !isTireMenuOpen || isCollapsed
+                    ? "bg-amber-100/90 text-amber-950 border border-amber-400 animate-pulse shadow-xs"
+                    : "bg-amber-50 text-amber-900 border border-amber-300"
+                  : tireSubMenus.some((m) => m.id === activeView)
+                    ? "bg-red-50/80 text-red-900 border border-red-200"
+                    : "text-slate-700 hover:bg-slate-50"
               }`}>
               <div className="flex items-center gap-2.5 min-w-0">
                 <Disc size={17} className="text-red-600" />
@@ -313,7 +313,7 @@ export default function Sidebar({
                       key={menu.id}
                       type="button"
                       onClick={() => onSelectView(menu.id)}
-                      className={`w-full flex items-center justify-between rounded-xl px-2.5 py-2 font-bold text-xs transition ${
+                      className={`w-full relative flex items-center justify-between rounded-xl px-2.5 py-2 font-bold text-xs transition ${
                         isActive
                           ? "bg-red-600 text-white shadow-xs"
                           : "text-slate-600 hover:bg-red-50 hover:text-red-900"
@@ -326,12 +326,21 @@ export default function Sidebar({
                         <span
                           className={`rounded px-1.5 py-0.2 text-[9px] font-black uppercase shrink-0 ${
                             isActive
-                              ? "bg-white/20 text-white"
+                              ? menu.badgeColor?.includes("animate-pulse")
+                                ? "bg-amber-300 text-amber-950 font-black animate-pulse"
+                                : "bg-white/20 text-white"
                               : menu.badgeColor || "bg-slate-100 text-slate-600"
                           }`}>
                           {menu.badge}
                         </span>
                       )}
+                      {menu.id === "digital-twin" &&
+                        incompleteTiresTruckCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2 right-3 top-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                          </span>
+                        )}
                     </button>
                   );
                 })}

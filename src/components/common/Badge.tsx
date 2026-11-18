@@ -10,6 +10,7 @@ export default function Badge({
   icon: Icon,
   pulse = false,
   className = "",
+  ...props
 }: BadgeProps) {
   const variantClasses: Record<BadgeVariant, string> = {
     neutral: "bg-slate-100 text-slate-700 border-slate-200",
@@ -24,7 +25,8 @@ export default function Badge({
     <span
       className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
         variantClasses[variant]
-      } ${pulse ? "animate-pulse" : ""} ${className}`}>
+      } ${pulse ? "animate-pulse" : ""} ${className}`}
+      {...props}>
       {Icon && <Icon size={11} className="shrink-0" />}
       {children}
     </span>
