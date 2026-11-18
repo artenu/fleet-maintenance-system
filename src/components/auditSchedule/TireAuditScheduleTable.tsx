@@ -7,7 +7,6 @@ import type {
 // 🧱 Komponen Reusable Design System
 import {
   Card,
-  Badge,
   Button,
   Table,
   TableHeader,
@@ -17,6 +16,10 @@ import {
   TableCell,
 } from "@/components/common";
 import { SearchInput, Select } from "@/components/forms";
+import {
+  AUDIT_STATUS_FILTER_OPTIONS,
+  getAuditStatusBadge,
+} from "@/constants/auditSchedule";
 
 import { Filter, User, Clock, CheckCircle2 } from "lucide-react";
 
@@ -63,12 +66,7 @@ export default function TireAuditScheduleTable({
               onChange={(e) =>
                 onStatusFilterChange(e.target.value as AuditStatusFilter)
               }
-              options={[
-                { value: "ALL", label: "Semua Status" },
-                { value: "OVERDUE", label: "Kritis (Overdue)" },
-                { value: "RESCHEDULED", label: "Dispensasi" },
-                { value: "PENDING", label: "Menunggu Audit" },
-              ]}
+              options={AUDIT_STATUS_FILTER_OPTIONS}
             />
           </div>
         </div>
@@ -112,15 +110,7 @@ export default function TireAuditScheduleTable({
                   {truck.auditSchedule.nextAuditSchedule}
                 </TableCell>
                 <TableCell>
-                  {truck.auditSchedule.status === "OVERDUE" ? (
-                    <Badge variant="danger" className="animate-pulse">
-                      OVERDUE
-                    </Badge>
-                  ) : truck.auditSchedule.status === "RESCHEDULED" ? (
-                    <Badge variant="info">RESCHEDULED</Badge>
-                  ) : (
-                    <Badge variant="success">TERJADWAL</Badge>
-                  )}
+                  {getAuditStatusBadge(truck.auditSchedule.status)}
                 </TableCell>
                 <TableCell className="text-slate-600 font-medium">
                   {truck.auditSchedule.surveyorName}

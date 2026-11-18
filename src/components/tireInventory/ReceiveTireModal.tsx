@@ -13,6 +13,10 @@ import type {
   ReceiveTireModalProps,
 } from "@/types/TireInventoryView/TireInventoryViewTypes";
 import { BRAND_PROFILES } from "@/constants/truck/tireRules";
+import {
+  TIRE_SIZE_OPTIONS,
+  RETREAD_CASING_RECEIVE_OPTIONS,
+} from "@/constants/tireInventory";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 
 // 🧱 Komponen Reusable Design System
@@ -153,11 +157,7 @@ export default function ReceiveTireModal({
             label="Ukuran & Spesifikasi"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            options={[
-              { value: "10.00-20 16PR", label: "10.00-20 16PR (Standar Truk)" },
-              { value: "1000 R20", label: "1000 R20 (Radial)" },
-              { value: "11R22.5", label: "11R22.5 (Tubeless)" },
-            ]}
+            options={TIRE_SIZE_OPTIONS}
             required
           />
 
@@ -175,14 +175,7 @@ export default function ReceiveTireModal({
               label="Status Casing Ban"
               value={retreadStatus}
               onChange={(e) => setRetreadStatus(e.target.value as RetreadStatus)}
-              options={[
-                { value: "R1", label: "R1 (Vulkanisir ke-1)" },
-                { value: "R2", label: "R2 (Vulkanisir ke-2)" },
-                {
-                  value: "R3",
-                  label: "R3 (Vulkanisir ke-3 - Batas Maksimal)",
-                },
-              ]}
+              options={RETREAD_CASING_RECEIVE_OPTIONS}
               required
             />
           )}

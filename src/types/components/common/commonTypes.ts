@@ -30,7 +30,7 @@ export type BadgeVariant =
   | "info"
   | "purple";
 
-export interface BadgeProps {
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children: ReactNode;
   variant?: BadgeVariant;
   icon?: LucideIcon;

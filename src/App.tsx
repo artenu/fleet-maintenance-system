@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Sidebar, { type TireMaintenanceView } from "./components/layout/Sidebar";
-import TireInspectionModal from "./components/TireInspectionModal";
-import TireRotationModal, {
-  type RotationResultPayload,
-} from "./components/TireRotationModal";
+import {
+  TireInspectionModal,
+  TireRotationModal,
+} from "./components/digitalTwin";
+import type { RotationResultPayload } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
+import { Select } from "./components/common";
 
 // Views Terisolasi
 import DigitalTwinView from "./views/DigitalTwinView";
@@ -13,6 +15,7 @@ import TireHistoryView from "./views/TireHistoryView";
 import TireAnalyticsView from "./views/TireAnalyticsView";
 import TireAuditScheduleView from "./views/TireAuditScheduleView";
 import FleetHealthDashboardView from "./views/FleetHealthDashboardView";
+import VehicleInspectionView from "./views/VehicleInspectionView";
 
 import {
   mockTruckTireList,
@@ -283,6 +286,42 @@ export default function App() {
     setWarehouseTires((prev) => [newTire, ...prev]);
   };
 
+  // Handler Pasang Ban Baru / Ambil dari Gudang ke Slot Kosong di Digital Twin
+  const handleInstallTire = (position: WheelPosition, newTire: TireAsset) => {
+    // 1. Tambahkan ban ke armada truk aktif
+    setTruckList((prevList) =>
+      prevList.map((truck) => {
+        if (truck.id !== activeTruck.id) {
+          return truck;
+        }
+        const filteredTires = truck.tires.filter(
+          (t) => t.currentPosition !== position,
+        );
+        return {
+          ...truck,
+          tires: [...filteredTires, newTire],
+        };
+      }),
+    );
+
+    // 2. Jika ban diambil dari gudang pool, kurangi stok gudang
+    setWarehouseTires((prevWH) => prevWH.filter((w) => w.id !== newTire.id));
+
+    // 3. Refresh slot yang terpilih secara real-time
+    const refreshedSlot = evaluateWheelSlot(
+      position,
+      newTire,
+      activeTruck.currentOdometer,
+    );
+    setSelectedSlot(refreshedSlot);
+
+    addToast(
+      "success",
+      `Ban ${newTire.serialNumber} Berhasil Dipasang di Slot ${position}!`,
+      `Status: ${newTire.retreadStatus}, Merk: ${newTire.brand}, Odo Pasang: ${activeTruck.currentOdometer.toLocaleString("id-ID")} KM`,
+    );
+  };
+
   // Handler Mode Inspeksi Berantai Surveyor (Rapid Inspection Flow)
   const handleSaveAndNext = (updatedTire: TireAsset, newOdometer: number) => {
     handleSaveInspection(updatedTire, newOdometer);
@@ -383,6 +422,27 @@ export default function App() {
     );
   };
 
+  // Hitung jumlah armada yang bannya belum lengkap atau unit baru tanpa ban
+  const incompleteTiresTruckCount = useMemo(() => {
+    return truckList.filter((truck) => {
+      const attachedChassis = chassisList.find(
+        (c) => c.attachedHeadId === truck.id,
+      );
+      const isTruckBobtail = !attachedChassis;
+      const configType = attachedChassis?.type || truck.chassisType;
+      const expectedCount = isTruckBobtail
+        ? 6
+        : configType === "2_AXLE"
+          ? 14
+          : 18;
+      const installedCount = truck.tires.filter(
+        (t) => t.currentPosition !== "S1",
+      ).length;
+      const hasNoTires = truck.tires.length === 0;
+      return hasNoTires || installedCount < expectedCount;
+    }).length;
+  }, [truckList, chassisList]);
+
   return (
     <div className="flex min-h-screen bg-slate-100 text-slate-900 font-sans antialiased">
       {/* 1. Sidebar Navigasi Kiri */}
@@ -390,6 +450,7 @@ export default function App() {
         activeView={activeView}
         onSelectView={setActiveView}
         overdueCount={overdueCount}
+        incompleteTiresTruckCount={incompleteTiresTruckCount}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
       />
@@ -426,6 +487,8 @@ export default function App() {
                       "Analitik Biaya & Durabilitas Merk (CPK)"}
                     {activeView === "audit-schedule" &&
                       "Jadwal Audit Fisik & Penundaan Izin"}
+                    {activeView === "vehicle-inspection" &&
+                      "Pemeriksaan Fisik Unit & Sasis (Pre-Trip Walkaround)"}
                   </h1>
                   <span className="rounded-md bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
                     PORTAL POOL
@@ -439,23 +502,31 @@ export default function App() {
 
             {/* Selector Unit Truk (Muncul di Digital Twin) */}
             {activeView === "digital-twin" && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">
+              <div className="flex items-center gap-2 min-w-[300px]">
+                <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">
                   Pilih Unit Truk:
                 </span>
-                <select
+                <Select
                   value={selectedTruckId}
                   onChange={(e) => {
                     setSelectedTruckId(e.target.value);
                     setSelectedSlot(null);
                   }}
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-2xs focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20">
-                  {truckList.map((truck) => (
-                    <option key={truck.id} value={truck.id}>
-                      {truck.unitCode} ({truck.plateNumber}) • {truck.capacity}
-                    </option>
-                  ))}
-                </select>
+                  searchPlaceholder="Cari lambung / plat truk..."
+                  options={truckList.map((truck) => {
+                    const attachedChassis = chassisList.find(
+                      (c) => c.attachedHeadId === truck.id,
+                    );
+                    const statusLabel = attachedChassis
+                      ? `${attachedChassis.lengthCategory} (${attachedChassis.chassisCode})`
+                      : "Bobtail (6 Ban)";
+
+                    return {
+                      value: truck.id,
+                      label: `${truck.unitCode} (${truck.plateNumber}) • ${statusLabel}`,
+                    };
+                  })}
+                />
               </div>
             )}
           </div>
@@ -466,12 +537,32 @@ export default function App() {
           {activeView === "digital-twin" && (
             <DigitalTwinView
               activeTruck={activeTruck}
+              chassisList={chassisList}
+              warehouseTires={warehouseTires}
               selectedSlot={selectedSlot}
               onSelectSlot={setSelectedSlot}
+              truckList={truckList}
+              onSelectTruck={(truckId) => {
+                setSelectedTruckId(truckId);
+                setSelectedSlot(null);
+              }}
               onOpenInspection={() => setIsInspectionModalOpen(true)}
               onOpenRotation={() => setIsRotationModalOpen(true)}
               onEmergencySwapSpare={handleEmergencySwapSpare}
               onApplyMechanicOverride={handleApplyMechanicOverride}
+              onInstallTire={handleInstallTire}
+              onSaveTruckTires={(updatedTruck) => {
+                setTruckList((prevList) =>
+                  prevList.map((t) =>
+                    t.unitCode === updatedTruck.unitCode ? updatedTruck : t,
+                  ),
+                );
+                addToast(
+                  "success",
+                  `Data Ban Unit ${updatedTruck.unitCode} Berhasil Diperbarui!`,
+                  `Total ${updatedTruck.tires.length} ban aktif tersinkronisasi ke Digital Twin.`,
+                );
+              }}
             />
           )}
 
@@ -523,6 +614,18 @@ export default function App() {
               chassisList={chassisList}
               onCouple={handleCoupleChassis}
               onUncouple={handleUncoupleChassis}
+            />
+          )}
+
+          {activeView === "vehicle-inspection" && (
+            <VehicleInspectionView
+              onSuccessSubmit={(unitCode) => {
+                addToast(
+                  "success",
+                  `BAP Inspeksi Fisik Unit ${unitCode} Berhasil Disahkan!`,
+                  "Dokumen telah tersimpan dan siap dicetak untuk arsip pool/supir.",
+                );
+              }}
             />
           )}
 

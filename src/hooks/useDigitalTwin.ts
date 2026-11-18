@@ -18,16 +18,19 @@ export function useDigitalTwin({
   );
 
   // Modal Toleransi Mekanik (+5.000 KM Override)
-  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState<boolean>(false);
+  const [isOverrideModalOpen, setIsOverrideModalOpen] =
+    useState<boolean>(false);
   const [mechanicName, setMechanicName] = useState<string>(
-    "Slamet Riyadi (Kepala Mekanik)"
+    "Slamet Riyadi (Kepala Mekanik)",
   );
   const [overrideReason, setOverrideReason] = useState<string>(
-    "Fisik kembangan masih tebal (>60%) & merata, rute operasional jalan tol datar"
+    "Fisik kembangan masih tebal (>60%) & merata, rute operasional jalan tol datar",
   );
 
   // Modal Peringatan Pelanggaran Swap Serep
-  const [spareViolationMsg, setSpareViolationMsg] = useState<string | null>(null);
+  const [spareViolationMsg, setSpareViolationMsg] = useState<string | null>(
+    null,
+  );
 
   // Data ban serep S1
   const spareTire = useMemo(() => {
@@ -51,14 +54,14 @@ export function useDigitalTwin({
       spareTire.retreadStatus !== "R1"
     ) {
       setSpareViolationMsg(
-        `DILARANG KERAS (Golden Rule #1): Ban serep S1 berstatus ${spareTire.retreadStatus}. Gandar Kemudi (Steer ${selectedSlot.position}) hanya diizinkan ban baru (R0) atau 1x vulkanisir (R1) demi keselamatan manuver kemudi di jalan raya!`
+        `DILARANG KERAS (Golden Rule #1): Ban serep S1 berstatus ${spareTire.retreadStatus}. Gandar Kemudi (Steer ${selectedSlot.position}) hanya diizinkan ban baru (R0) atau 1x vulkanisir (R1) demi keselamatan manuver kemudi di jalan raya!`,
       );
       return;
     }
 
     if (
       window.confirm(
-        `Konfirmasi Emergency Roadside Swap:\nTukar posisi ban ${selectedSlot.position} (${selectedSlot.tire.serialNumber}) dengan Ban Serep S1 (${spareTire ? spareTire.serialNumber : "Kosong"})?`
+        `Konfirmasi Emergency Roadside Swap:\nTukar posisi ban ${selectedSlot.position} (${selectedSlot.tire.serialNumber}) dengan Ban Serep S1 (${spareTire ? spareTire.serialNumber : "Kosong"})?`,
       )
     ) {
       onEmergencySwapSpare(selectedSlot.position);
@@ -75,7 +78,7 @@ export function useDigitalTwin({
     onApplyMechanicOverride(
       selectedSlot.position,
       mechanicName,
-      overrideReason
+      overrideReason,
     );
     setIsOverrideModalOpen(false);
   };
@@ -93,12 +96,16 @@ export function useDigitalTwin({
     });
   }, [activeTruck.tires]);
 
-  const isGrounded = criticalTires.length > 0;
-  const readinessPercent = Math.round(
-    ((activeTruck.tires.length - criticalTires.length) /
-      (activeTruck.tires.length || 1)) *
-      100
-  );
+  // 👇 Deteksi otomatis: jika ban kosong (unit baru), otomatis GROUNDED dan 0% Layak
+  const hasNoTires = activeTruck.tires.length === 0;
+  const isGrounded = criticalTires.length > 0 || hasNoTires;
+  const readinessPercent = hasNoTires
+    ? 0
+    : Math.round(
+        ((activeTruck.tires.length - criticalTires.length) /
+          (activeTruck.tires.length || 1)) *
+          100,
+      );
 
   return {
     previewImage,
@@ -116,7 +123,7 @@ export function useDigitalTwin({
     handleConfirmOverride,
     criticalTires,
     isGrounded,
+    hasNoTires,
     readinessPercent,
   };
 }
-
