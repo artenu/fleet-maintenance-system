@@ -12,7 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Card, Badge, Button, TextArea } from "@/components/common";
-import type { VehicleInspectionHeader } from "@/types/vehicleInspection";
+import type { VehicleInspectionHeader } from "@/types/VehicleInspection";
 
 interface DriverPhotoConfirmationSectionProps {
   header: VehicleInspectionHeader;

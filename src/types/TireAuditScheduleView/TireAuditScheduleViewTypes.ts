@@ -1,5 +1,5 @@
 // src/types/TireAuditScheduleView/TireAuditScheduleViewTypes.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
+import type { TruckFleetTireItem } from "@/types/TireManagement/tires";
 
 /**
  * Prop interface untuk komponen TireAuditScheduleView

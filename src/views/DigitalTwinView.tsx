@@ -30,6 +30,8 @@ export default function DigitalTwinView({
   onEmergencySwapSpare,
   onApplyMechanicOverride,
   onInstallTire,
+  onMoveTireBetweenSlots,
+  onTransferTireFromOtherTruck,
 }: DigitalTwinViewProps) {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
 
@@ -274,8 +276,11 @@ export default function DigitalTwinView({
             key={`${activeTruck.id}-${activeChassis?.id || "bobtail"}-${activeChassis?.type || activeTruck.chassisType}`}
             unitCode={activeTruck.unitCode}
             plateNumber={activeTruck.plateNumber}
+            brand={activeTruck.brand}
+            driver={activeTruck.driver}
             currentOdometer={activeTruck.currentOdometer}
             initialChassisType={activeChassis?.type || activeTruck.chassisType}
+            attachedChassisCode={activeChassis?.chassisCode}
             chassisLengthCategory={
               activeChassis?.lengthCategory || activeTruck.capacity
             }
@@ -355,11 +360,34 @@ export default function DigitalTwinView({
         onClose={() => setIsInstallModalOpen(false)}
         slot={selectedSlot}
         truckUnitCode={activeTruck.unitCode}
+        activeTruckId={activeTruck.id}
         currentOdometer={activeTruck.currentOdometer}
         warehouseTires={warehouseTires}
+        currentTruckTires={activeTruck.tires}
+        truckList={truckList}
         onConfirmInstall={(position, tire) => {
           if (onInstallTire) {
             onInstallTire(position, tire);
+          }
+          setIsInstallModalOpen(false);
+        }}
+        onMoveTireFromSlot={(fromPos, toPos) => {
+          if (onMoveTireBetweenSlots) {
+            onMoveTireBetweenSlots(fromPos, toPos);
+          }
+          setIsInstallModalOpen(false);
+        }}
+        onTransferTireFromOtherTruck={(
+          sourceTruckId,
+          sourceTireId,
+          targetPos,
+        ) => {
+          if (onTransferTireFromOtherTruck) {
+            onTransferTireFromOtherTruck(
+              sourceTruckId,
+              sourceTireId,
+              targetPos,
+            );
           }
           setIsInstallModalOpen(false);
         }}

@@ -1,6 +1,9 @@
 // src/types/FleetHealthDashboardView/FleetHealthDashboardViewTypes.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
-import type { ChassisTrailerAsset, TireAsset } from "@/types/truck/tires";
+import type {
+  TruckFleetTireItem,
+  ChassisTrailerAsset,
+  TireAsset,
+} from "@/types/TireManagement/tires";
 
 /**
  * Prop interface untuk komponen FleetHealthDashboardView

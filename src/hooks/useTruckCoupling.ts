@@ -1,6 +1,9 @@
 // src/hooks/useTruckCoupling.ts
 import { useState, useMemo } from "react";
-import type { ChassisTrailerAsset, ChassisType } from "@/types/truck/tires";
+import type {
+  ChassisTrailerAsset,
+  ChassisType,
+} from "@/types/TireManagement/tires";
 import type {
   UseTruckCouplingProps,
   UseTruckCouplingReturn,

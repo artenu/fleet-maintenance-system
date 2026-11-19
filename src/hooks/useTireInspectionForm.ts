@@ -4,7 +4,7 @@ import type {
   TireAsset,
   RetreadStatus,
   ActionRecommendation,
-} from "@/types/truck/tires";
+} from "@/types/TireManagement/tires";
 import type { UseTireInspectionFormProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 import {
@@ -28,8 +28,7 @@ export function useTireInspectionForm({
   const [isFullPreviewOpen, setIsFullPreviewOpen] = useState<boolean>(false);
   const isSteer = axleType === "steer";
   const initialPercent =
-    tire.lastInspectionPercent ||
-    INSPECTION_THRESHOLDS.DEFAULT_INITIAL_PERCENT;
+    tire.lastInspectionPercent || INSPECTION_THRESHOLDS.DEFAULT_INITIAL_PERCENT;
 
   // State Formulir Inspeksi Lapangan
   const [serialNumber, setSerialNumber] = useState<string>(tire.serialNumber);
@@ -159,4 +158,3 @@ export function useTireInspectionForm({
     isSteer,
   };
 }
-

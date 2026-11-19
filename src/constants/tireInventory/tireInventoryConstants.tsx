@@ -1,7 +1,7 @@
 // src/constants/tireInventory/tireInventoryConstants.tsx
 import { Badge } from "@/components/common";
 import type { BadgeVariant } from "@/types/components/common/commonTypes";
-import type { RetreadStatus } from "@/types/truck/tires";
+import type { RetreadStatus } from "@/types/TireManagement/tires";
 import type { RetreadFilterType } from "@/types/TireInventoryView/TireInventoryViewTypes";
 
 export interface TireCasingConfig {
@@ -67,4 +67,3 @@ export function getTireCasingBadge(status: RetreadStatus | string) {
     TIRE_CASING_STATUS_CONFIGS[status] || TIRE_CASING_STATUS_CONFIGS.SCRAP;
   return <Badge variant={config.badgeVariant}>{config.label}</Badge>;
 }
-

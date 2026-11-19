@@ -4,7 +4,7 @@ import { PageHeader, Grid } from "@/components/layout";
 import { Badge, Card } from "@/components/common";
 import { FormInput, NumberInput, DateInput, Select } from "@/components/forms";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
-import type { ChassisType } from "@/types/truck/tires";
+import type { ChassisType } from "@/types/TireManagement/tires";
 import { CHASSIS_CONFIG_OPTIONS } from "@/constants/truck";
 import type { TruckMasterFormProps } from "@/types/AddNewTruckView/AddNewTruckViewTypes";
 

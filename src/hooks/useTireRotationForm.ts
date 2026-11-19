@@ -1,6 +1,6 @@
 // src/hooks/useTireRotationForm.ts
 import { useState, useMemo, type FormEvent } from "react";
-import type { WheelPosition } from "@/types/truck/tires";
+import type { WheelPosition } from "@/types/TireManagement/tires";
 import type {
   RotationMode,
   SourceTireDestination,
@@ -52,7 +52,9 @@ export function useTireRotationForm({
   );
   const [sourceDestination, setSourceDestination] =
     useState<SourceTireDestination>("GUDANG");
-  const [reason, setReason] = useState<string>(ROTATION_REASON_OPTIONS[0].value);
+  const [reason, setReason] = useState<string>(
+    ROTATION_REASON_OPTIONS[0].value,
+  );
   const [mechanicPic, setMechanicPic] = useState<string>(
     DEFAULT_ROTATION_MECHANIC_PIC,
   );
@@ -166,4 +168,3 @@ export function useTireRotationForm({
     handleSubmit,
   };
 }
-

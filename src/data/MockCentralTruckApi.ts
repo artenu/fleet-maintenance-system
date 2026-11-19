@@ -1,5 +1,5 @@
 // src/data/mockCentralTruckApi.ts
-import { type ChassisType } from "../types/truck/tires";
+import { type ChassisType } from "../types/TireManagement/tires";
 
 export interface CentralTruckApiResponseItem {
   id: string;

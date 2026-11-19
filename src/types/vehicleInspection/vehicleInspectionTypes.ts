@@ -1,5 +1,5 @@
 // src/types/vehicleInspection/vehicleInspectionTypes.ts
-import type { ChassisType } from "@/types/truck/tires";
+import type { ChassisType } from "@/types/TireManagement/tires";
 
 /**
  * Status kondisi kelengkapan alat & dokumen (Seksi 1)

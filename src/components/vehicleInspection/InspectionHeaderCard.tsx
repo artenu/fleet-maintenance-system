@@ -3,8 +3,8 @@ import { Truck, UserCheck, Database } from "lucide-react";
 import { Card, Badge } from "@/components/common";
 import { FormInput, NumberInput, Select, DateInput } from "@/components/forms";
 import { DEFAULT_INSPECTION_LOCATIONS } from "@/constants/vehicleInspection";
-import type { VehicleInspectionHeader } from "@/types/vehicleInspection";
-import type { ChassisType } from "@/types/truck/tires";
+import type { VehicleInspectionHeader } from "@/types/VehicleInspection";
+import type { ChassisType } from "@/types/TireManagement/tires";
 
 interface InspectionHeaderCardProps {
   header: VehicleInspectionHeader;
@@ -96,7 +96,7 @@ export default function InspectionHeaderCard({
 
         {/* 5. Panjang Sasis (BISA DIUBAH / TIDAK DISABLED) */}
         <Select
-          label="Panjang Sasis (Manual Opsi)"
+          label="Panjang Sasis"
           value={header.chassisLengthCategory}
           onChange={(e) =>
             onChangeHeader({
@@ -112,7 +112,7 @@ export default function InspectionHeaderCard({
 
         {/* 6. Konfigurasi Gandar Sasis (BISA DIUBAH / TIDAK DISABLED) */}
         <Select
-          label="Konfigurasi Gandar (Manual Opsi)"
+          label="Konfigurasi Gandar"
           value={header.chassisType}
           onChange={(e) =>
             onChangeHeader({ chassisType: e.target.value as ChassisType })

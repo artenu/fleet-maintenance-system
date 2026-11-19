@@ -5,7 +5,7 @@ import {
   STANDARD_BRANDS,
   INSPECTION_RETREAD_STATUS_OPTIONS,
 } from "@/constants/digitalTwin";
-import type { RetreadStatus } from "@/types/truck/tires";
+import type { RetreadStatus } from "@/types/TireManagement/tires";
 import type { InspectionIdentitySectionProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 /**
@@ -60,7 +60,9 @@ export default function InspectionIdentitySection({
         <Select
           label="Status Casing (Vulkanisir)"
           value={retreadStatus}
-          onChange={(e) => onChangeRetreadStatus(e.target.value as RetreadStatus)}
+          onChange={(e) =>
+            onChangeRetreadStatus(e.target.value as RetreadStatus)
+          }
           options={INSPECTION_RETREAD_STATUS_OPTIONS}
           helperText={
             isSteer
@@ -73,4 +75,3 @@ export default function InspectionIdentitySection({
     </div>
   );
 }
-

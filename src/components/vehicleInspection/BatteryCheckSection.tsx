@@ -12,7 +12,7 @@ import { COMPONENT_CONDITION_OPTIONS } from "@/constants/vehicleInspection";
 import type {
   BatteryCheckData,
   ComponentConditionStatus,
-} from "@/types/vehicleInspection";
+} from "@/types/VehicleInspection";
 
 interface BatteryCheckSectionProps {
   battery: BatteryCheckData;

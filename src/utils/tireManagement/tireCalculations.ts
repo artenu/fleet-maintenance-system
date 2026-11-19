@@ -3,13 +3,13 @@ import {
   getAxleTypeByPosition,
   getBrandProfile,
   TIRE_THRESHOLDS,
-} from "../constants/truck/tireRules";
+} from "../../constants/truck/tireRules";
 import {
   type TireAsset,
   type TireHealthStatus,
   type WheelPosition,
   type WheelSlotEvaluation,
-} from "../types/truck/tires";
+} from "../../types/TireManagement/tires";
 
 /**
  * Evaluasi Status Kesehatan Satu Slot Roda (Decision Matrix Engine)

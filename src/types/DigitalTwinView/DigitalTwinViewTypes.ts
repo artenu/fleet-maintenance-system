@@ -1,14 +1,14 @@
 // src/types/DigitalTwinView/DigitalTwinViewTypes.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
 import type {
+  TruckFleetTireItem,
   WheelPosition,
   WheelSlotEvaluation,
   TireAsset,
   ChassisType,
   RetreadStatus,
   ActionRecommendation,
-} from "@/types/truck/tires";
-import type { ChassisTrailerAsset } from "@/types/truck/tires";
+  ChassisTrailerAsset,
+} from "@/types/TireManagement/tires";
 import type { ChangeEvent } from "react";
 
 /**
@@ -32,6 +32,15 @@ export interface DigitalTwinViewProps {
   ) => void;
   onSaveTruckTires?: (updatedTruck: TruckFleetTireItem) => void;
   onInstallTire?: (position: WheelPosition, newTire: TireAsset) => void;
+  onMoveTireBetweenSlots?: (
+    fromPosition: WheelPosition,
+    toPosition: WheelPosition,
+  ) => void;
+  onTransferTireFromOtherTruck?: (
+    sourceTruckId: string,
+    sourceTireId: string,
+    targetPosition: WheelPosition,
+  ) => void;
 }
 
 /**
@@ -186,8 +195,11 @@ export interface UseTireRotationFormProps {
 export interface WheelLayoutVisualizerProps {
   unitCode: string;
   plateNumber: string;
+  brand?: string;
+  driver?: string;
   currentOdometer: number;
   initialChassisType?: ChassisType;
+  attachedChassisCode?: string;
   chassisLengthCategory?: "20FT" | "40FT";
   isBobTail?: boolean;
   tires: TireAsset[];
@@ -223,6 +235,15 @@ export interface WheelLayoutToolbarProps {
  */
 export interface WheelLayoutSummaryBannerProps {
   criticalCount: number;
+  unitCode?: string;
+  plateNumber?: string;
+  brand?: string;
+  driver?: string;
+  currentOdometer?: number;
+  attachedChassisCode?: string;
+  chassisType?: ChassisType;
+  chassisLengthCategory?: "20FT" | "40FT";
+  isBobTail?: boolean;
 }
 
 /**
@@ -287,6 +308,7 @@ export interface DigitalTwinMetricsProps {
  */
 export interface SelectedWheelDetailCardProps {
   selectedSlot: WheelSlotEvaluation | null;
+  hasNoTires?: boolean;
   onOpenInspection: () => void;
   onOpenRotation: () => void;
   onQuickSwapSpare: () => void;

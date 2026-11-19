@@ -74,13 +74,13 @@ export default function InspectionPhotoSection({
         isOpen={isFullPreviewOpen && Boolean(photoPreview)}
         onClose={onCloseFullPreview}
         title={`Foto Bukti Fisik Lapangan • ${serialNumber}`}
-        size="lg">
+        size="xl">
         {photoPreview && (
           <div className="flex items-center justify-center p-2 bg-slate-900 rounded-xl">
             <img
               src={photoPreview}
               alt="Ukuran Penuh"
-              className="max-h-[65vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+              className="max-h-[60vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
             />
           </div>
         )}
@@ -88,4 +88,3 @@ export default function InspectionPhotoSection({
     </div>
   );
 }
-

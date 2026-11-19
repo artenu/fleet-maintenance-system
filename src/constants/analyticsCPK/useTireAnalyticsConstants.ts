@@ -1,6 +1,6 @@
 // src/constants/analyticsCPK/useTireAnalyticsConstants.ts
 import { BRAND_PROFILES } from "@/constants/truck/tireRules";
-import { calculateCpk } from "@/utils/tireCalculations";
+import { calculateCpk } from "@/utils/tireManagement/tireCalculations";
 import type { BrandAnalyticsItem } from "@/types/TireAnalyticsView/TireAnalyticsViewTypes";
 
 /**
@@ -69,8 +69,7 @@ export const INITIAL_BRAND_ANALYTICS: BrandAnalyticsItem[] = [
     id: "ANL-006",
     brandName: "Gajah Tunggal",
     tier: "TIER_2",
-    standardPrice:
-      BRAND_PROFILES["Gajah Tunggal"]?.standardPrice ?? 2750000,
+    standardPrice: BRAND_PROFILES["Gajah Tunggal"]?.standardPrice ?? 2750000,
     averageKmRun: 49000,
     cpkValue: calculateCpk(2750000, 49000),
     testedSampleCount: 16,

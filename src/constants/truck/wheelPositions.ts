@@ -1,5 +1,5 @@
 // src/constants/truck/wheelPositions.ts
-import type { WheelPosition } from "@/types/truck/tires";
+import type { WheelPosition } from "@/types/TireManagement/tires";
 
 /**
  * Kamus deskripsi posisi roda standar surveyor PT ALN.
@@ -32,4 +32,3 @@ export function getWheelPositionDescription(
   }
   return `Sasis Trailer • Posisi ${pos}`;
 }
-

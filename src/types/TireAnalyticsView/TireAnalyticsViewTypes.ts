@@ -1,5 +1,5 @@
 // src/types/TireAnalyticsView/TireAnalyticsViewTypes.ts
-import type { BrandTier } from "@/types/truck/tires";
+import type { BrandTier } from "@/types/TireManagement/tires";
 
 /**
  * Item data analitik performa dan CPK suatu merk ban
@@ -45,4 +45,3 @@ export interface TireAnalyticsTableProps {
   sortBy: AnalyticsSortBy;
   onSortByChange: (sortBy: AnalyticsSortBy) => void;
 }
-

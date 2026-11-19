@@ -8,3 +8,4 @@ export * from "./truckCoupling";
 export * from "./digitalTwin";
 export * from "./addNewTruck";
 export * from "./vehicleInspection";
+export * from "./sidebar";
