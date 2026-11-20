@@ -16,10 +16,10 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
     currentOdometer: 145400,
     lastIotSync: "2 menit lalu",
     auditSchedule: {
-      period: "Oktober 2026",
-      lastAuditDate: "2026-09-24",
-      nextAuditSchedule: "2026-10-25",
-      status: "PENDING",
+      period: "November 2026",
+      lastAuditDate: "2026-11-05",
+      nextAuditSchedule: "2026-12-05",
+
       surveyorName: "Eko Wahyudi",
       rescheduledTo: null,
       rescheduleReason: null,
@@ -262,7 +262,7 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
       period: "Oktober 2026",
       lastAuditDate: "2026-09-15",
       nextAuditSchedule: "2026-10-15",
-      status: "OVERDUE",
+
       surveyorName: "Bambang Sudiro",
       rescheduledTo: null,
       rescheduleReason: null,
@@ -369,7 +369,7 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         treadDepthMm: 11.5,
         pressurePsi: 115,
       },
-      // Sasis Trailer 40FT (12 Ban Lengkap: C1 s/d C12 - Sesuai Baris 2 & 4 Excel!)
+      // Sasis Trailer CHS-005 2 Sumbu (8 Ban: C1 s/d C8)
       {
         id: "T-308",
         serialNumber: "BX-4001",
@@ -482,63 +482,6 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         treadDepthMm: 11.5,
         pressurePsi: 115,
       },
-      // Sumbu 3 (Trailer 40ft: C9 s/d C12) - C9 & C10 memicu Dual-Wheel Mating Warning
-      {
-        id: "T-316",
-        serialNumber: "BX-4009",
-        brand: "PT Boxer (Karet Medan)",
-        size: "Ukuran 1000, ring 20",
-        retreadStatus: "R2",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C9",
-        installOdometer: 193000, // 25.500 KM (Lewat batas)
-        lastInspectionPercent: 55,
-        lastInspectionDate: "2026-09-15",
-        treadDepthMm: 11.5,
-        pressurePsi: 115,
-      },
-      {
-        id: "T-317",
-        serialNumber: "BX-4010",
-        brand: "PT Boxer (Karet Medan)",
-        size: "Ukuran 1000, ring 20",
-        retreadStatus: "R2",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C10",
-        installOdometer: 200000,
-        lastInspectionPercent: 30, // Selisih 25% (> 20%) dari C9 -> Alert Dual Wheel!
-        lastInspectionDate: "2026-09-15",
-        treadDepthMm: 11.5,
-        pressurePsi: 115,
-      },
-      {
-        id: "T-318",
-        serialNumber: "BX-4011",
-        brand: "PT Boxer (Karet Medan)",
-        size: "Ukuran 1000, ring 20",
-        retreadStatus: "R1",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C11",
-        installOdometer: 200000,
-        lastInspectionPercent: 70,
-        lastInspectionDate: "2026-09-15",
-        treadDepthMm: 11.5,
-        pressurePsi: 115,
-      },
-      {
-        id: "T-319",
-        serialNumber: "BX-4012",
-        brand: "PT Boxer (Karet Medan)",
-        size: "Ukuran 1000, ring 20",
-        retreadStatus: "R1",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C12",
-        installOdometer: 200000,
-        lastInspectionPercent: 70,
-        lastInspectionDate: "2026-09-15",
-        treadDepthMm: 11.5,
-        pressurePsi: 115,
-      },
     ],
   },
   {
@@ -554,8 +497,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
     auditSchedule: {
       period: "November 2026",
       lastAuditDate: "-",
-      nextAuditSchedule: "2026-11-25",
-      status: "PENDING",
+      nextAuditSchedule: "2026-11-22",
+
       surveyorName: "Budi Santoso",
       rescheduledTo: null,
       rescheduleReason: null,
@@ -576,10 +519,10 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
       period: "November 2026",
       lastAuditDate: "2026-10-15",
       nextAuditSchedule: "2026-11-15",
-      status: "PENDING",
       surveyorName: "Budi Santoso",
-      rescheduledTo: null,
-      rescheduleReason: null,
+      rescheduledTo: "2026-11-27", // Dispensasi: ada job deadline ketat
+      rescheduleReason:
+        "Unit membawa kontainer ekspor ke Pelabuhan Belawan (closing kapal)",
     },
     tires: [
       // Gandar 1: Steer (2 Ban)

@@ -22,6 +22,8 @@ import {
   deriveChassisTypeFromCapacity,
 } from "@/data/MockCentralTruckApi";
 import { getOdometerKmByVin } from "@/data/MockHinoIotApi";
+import { AUDIT_RULES } from "@/constants/auditSchedule/auditRules";
+import { addDays } from "@/utils/auditSchedule";
 import type {
   TireInputData,
   UseTireConditionFormProps,
@@ -297,10 +299,7 @@ export function useTireConditionForm({
       auditSchedule: {
         period: "November 2026",
         lastAuditDate: inspectionDate,
-        nextAuditSchedule: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        status: "COMPLETED",
+        nextAuditSchedule: addDays(inspectionDate, AUDIT_RULES.CYCLE_DAYS),
         surveyorName: surveyorBadge,
         rescheduledTo: null,
         rescheduleReason: null,

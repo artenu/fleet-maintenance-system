@@ -5,10 +5,17 @@ import type {
   UseDigitalTwinProps,
   PhotoPreviewState,
 } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
+import {
+  getActiveWheelPositions,
+  getCriticalSlots,
+  getInstalledActiveTires,
+} from "@/utils/tireManagement/wheelLayout";
 
 export function useDigitalTwin({
   activeTruck,
   selectedSlot,
+  isBobTail,
+  chassisType,
   onEmergencySwapSpare,
   onApplyMechanicOverride,
 }: UseDigitalTwinProps) {
@@ -84,26 +91,39 @@ export function useDigitalTwin({
   };
 
   // Evaluasi Kelayakan Jalan Armada (Dispatch Readiness)
-  const criticalTires = useMemo(() => {
-    return activeTruck.tires.filter((t) => {
-      const isSteer = t.currentPosition === "H1" || t.currentPosition === "H2";
-      // Sinkron dengan aturan resmi MOM 4-11-2026: steer boleh R0 dan R1
-      const isSteerViolation =
-        isSteer && t.retreadStatus !== "R0" && t.retreadStatus !== "R1";
-      const isPhysicalCritical = t.lastInspectionPercent < 40;
-      const isAfkir = t.retreadStatus === "AFKIR";
-      return isSteerViolation || isPhysicalCritical || isAfkir;
-    });
-  }, [activeTruck.tires]);
+  // Hanya posisi roda aktif sesuai layout (S1 / ban serep tidak dihitung)
+  const activePositions = useMemo(() => {
+    return getActiveWheelPositions(isBobTail, chassisType);
+  }, [isBobTail, chassisType]);
 
-  // 👇 Deteksi otomatis: jika ban kosong (unit baru), otomatis GROUNDED dan 0% Layak
+  const installedTiresCount = useMemo(() => {
+    return getInstalledActiveTires(activeTruck.tires, activePositions).length;
+  }, [activeTruck.tires, activePositions]);
+
+  const criticalTires = useMemo(() => {
+    return getCriticalSlots(
+      activeTruck.tires,
+      activePositions,
+      activeTruck.currentOdometer,
+    );
+  }, [activeTruck.tires, activePositions, activeTruck.currentOdometer]);
+
   const hasNoTires = activeTruck.tires.length === 0;
-  const isGrounded = criticalTires.length > 0 || hasNoTires;
+  const expectedTiresCount = activePositions.length;
+  const missingTiresCount = Math.max(
+    0,
+    expectedTiresCount - installedTiresCount,
+  );
+  const isTiresIncomplete = !hasNoTires && missingTiresCount > 0;
+
+  // GROUNDED jika: belum ada ban, ada ban kritis, atau ban belum lengkap
+  const isGrounded =
+    hasNoTires || criticalTires.length > 0 || isTiresIncomplete;
+
   const readinessPercent = hasNoTires
     ? 0
     : Math.round(
-        ((activeTruck.tires.length - criticalTires.length) /
-          (activeTruck.tires.length || 1)) *
+        ((installedTiresCount - criticalTires.length) / expectedTiresCount) *
           100,
       );
 
@@ -125,5 +145,9 @@ export function useDigitalTwin({
     isGrounded,
     hasNoTires,
     readinessPercent,
+    expectedTiresCount,
+    installedTiresCount,
+    missingTiresCount,
+    isTiresIncomplete,
   };
 }

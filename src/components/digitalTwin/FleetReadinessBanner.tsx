@@ -8,6 +8,7 @@ export default function FleetReadinessBanner({
   plateNumber,
   isGrounded,
   criticalTiresCount,
+  missingTiresCount = 0,
   readinessPercent,
   hasNoTires = false,
   attachedChassisCode,
@@ -68,10 +69,24 @@ export default function FleetReadinessBanner({
                   </span>
                 ) : (
                   <span>
-                    Ditemukan{" "}
-                    <strong>{criticalTiresCount} roda berstatus KRITIS</strong>.
-                    Unit dilarang memuat kontainer sebelum ban diperbaiki atau
-                    dirotasi!
+                    {criticalTiresCount > 0 && (
+                      <>
+                        Ditemukan{" "}
+                        <strong>
+                          {criticalTiresCount} roda berstatus KRITIS
+                        </strong>
+                        .{" "}
+                      </>
+                    )}
+                    {missingTiresCount > 0 && (
+                      <>
+                        Masih ada{" "}
+                        <strong>{missingTiresCount} slot roda kosong</strong>{" "}
+                        belum terpasang.{" "}
+                      </>
+                    )}
+                    Unit dilarang memuat kontainer sebelum seluruh roda lengkap
+                    dan layak jalan!
                   </span>
                 )}
               </span>

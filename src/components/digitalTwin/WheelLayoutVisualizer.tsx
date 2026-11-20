@@ -17,6 +17,10 @@ import {
   TrailerChassisSection,
 } from "./wheelLayout";
 import { Link2Off } from "lucide-react";
+import {
+  getActiveWheelPositions,
+  getCriticalSlots,
+} from "@/utils/tireManagement/wheelLayout";
 
 /**
  * Komponen Visualisasi Tata Letak Roda & Denah Gandar Truk (Digital Twin)
@@ -63,14 +67,9 @@ export default function WheelLayoutVisualizer({
 
   // Hitung jumlah roda kritis (Memoized)
   const criticalCount = useMemo(() => {
-    return Array.from(tireMap.values()).filter((t) => {
-      const evalSlot = evaluateWheelSlot(t.currentPosition, t, currentOdometer);
-      return (
-        evalSlot.healthStatus === "CRITICAL" ||
-        evalSlot.ruleViolations.length > 0
-      );
-    }).length;
-  }, [tireMap, currentOdometer]);
+    const activePositions = getActiveWheelPositions(isBobTail, chassisType);
+    return getCriticalSlots(tires, activePositions, currentOdometer).length;
+  }, [tires, isBobTail, chassisType, currentOdometer]);
 
   return (
     <Card className="space-y-6">

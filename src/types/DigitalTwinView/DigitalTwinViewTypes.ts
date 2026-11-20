@@ -110,6 +110,8 @@ export interface DigitalTwinViewProps {
 export interface UseDigitalTwinProps {
   activeTruck: TruckFleetTireItem;
   selectedSlot: WheelSlotEvaluation | null;
+  isBobTail: boolean;
+  chassisType: ChassisType;
   onEmergencySwapSpare: (position: WheelPosition) => void;
   onApplyMechanicOverride: (
     position: WheelPosition,
@@ -289,6 +291,7 @@ export interface FleetReadinessBannerProps {
   isGrounded: boolean;
   criticalTiresCount: number;
   readinessPercent: number;
+  missingTiresCount?: number;
   attachedChassisCode?: string;
   chassisType?: ChassisType;
   hasNoTires?: boolean;

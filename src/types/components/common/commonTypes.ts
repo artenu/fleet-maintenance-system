@@ -50,6 +50,7 @@ export type StatCardVariant =
   | "success"
   | "danger"
   | "info"
+  | "warning"
   | "purple";
 
 export interface StatCardProps {

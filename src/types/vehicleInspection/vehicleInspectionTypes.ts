@@ -1,5 +1,6 @@
 // src/types/vehicleInspection/vehicleInspectionTypes.ts
 import type { ChassisType } from "@/types/TireManagement/tires";
+import type { PhysicalCheckItem } from "./physicalCheckTypes";
 
 /**
  * Status kondisi kelengkapan alat & dokumen (Seksi 1)
@@ -22,23 +23,6 @@ export interface ToolDocItem {
   hasExpiryDate?: boolean;
   expiryDate?: string;
   status: ToolDocStatus;
-  notes?: string;
-}
-
-/**
- * Item pengecekan fisik komponen kendaraan
- */
-export interface PhysicalCheckItem {
-  id: string;
-  name: string;
-  section:
-    | "FRONT"
-    | "RIGHT_SIDE"
-    | "LEFT_SIDE"
-    | "CABIN"
-    | "LIGHTS"
-    | "CHASSIS";
-  status: ComponentConditionStatus;
   notes?: string;
 }
 

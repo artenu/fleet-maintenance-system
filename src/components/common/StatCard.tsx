@@ -18,6 +18,7 @@ export default function StatCard({
     danger: "border-rose-200 bg-rose-50/60",
     info: "border-blue-200 bg-blue-50/60",
     purple: "border-purple-200 bg-purple-50/60",
+    warning: "border-amber-200 bg-amber-50/60",
   };
 
   const titleClasses: Record<StatCardVariant, string> = {
@@ -26,6 +27,7 @@ export default function StatCard({
     danger: "text-rose-700",
     info: "text-blue-700",
     purple: "text-purple-700",
+    warning: "text-amber-700",
   };
 
   const iconClasses: Record<StatCardVariant, string> = {
@@ -33,6 +35,7 @@ export default function StatCard({
     success: "bg-emerald-600 text-white shadow-xs",
     danger: "bg-rose-600 text-white shadow-xs",
     info: "bg-blue-600 text-white shadow-xs",
+    warning: "bg-amber-500 text-white shadow-xs",
     purple: "bg-purple-600 text-white shadow-xs",
   };
 
@@ -41,6 +44,7 @@ export default function StatCard({
     success: "text-emerald-900",
     danger: "text-rose-900",
     info: "text-blue-900",
+    warning: "text-amber-900",
     purple: "text-purple-900",
   };
 
@@ -58,7 +62,7 @@ export default function StatCard({
         </div>
       </div>
       <div className="mt-2 flex items-baseline gap-2">
-        <span className={`text-2xl font-black ${valueClasses[variant]}`}>
+        <span className={`text-lg font-black ${valueClasses[variant]}`}>
           {value}
         </span>
         {subValue && (

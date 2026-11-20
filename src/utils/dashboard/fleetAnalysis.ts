@@ -8,6 +8,7 @@ import type {
   FleetFilterTab,
   FleetHealthSummaryStats,
 } from "@/types/FleetHealthDashboardView/FleetHealthDashboardViewTypes";
+import { getAuditStatus } from "../auditSchedule";
 
 /**
  * Menghitung analisis kesehatan & kelaikan jalan seluruh armada truk dan gandengan sasis.
@@ -41,7 +42,7 @@ export function calculateFleetAnalysis(
         ? Math.min(...tires.map((t) => t.lastInspectionPercent ?? 100))
         : 100;
 
-    const isAuditOverdue = truck.auditSchedule?.status === "OVERDUE";
+    const isAuditOverdue = getAuditStatus(truck.auditSchedule) === "OVERDUE";
 
     // Status Kelaikan (Fit to Dispatch vs Grounded)
     const isGrounded =

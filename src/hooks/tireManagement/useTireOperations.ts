@@ -18,6 +18,10 @@ import {
   moveTireBetweenSlots,
   transferTireFromOtherTruck,
 } from "@/utils/tireManagement";
+import {
+  completeMonthlyAudit,
+  isMonthlyAuditDone,
+} from "@/utils/auditSchedule";
 
 interface UseTireOperationsProps {
   truckList: TruckFleetTireItem[];
@@ -53,17 +57,42 @@ export function useTireOperations({
     updatedTire: TireAsset,
     newOdometer: number,
   ) => {
+    // 1. Terapkan hasil inspeksi ban ke truk aktif
+    const [inspectedTruck] = updateTruckTireInspection(
+      [activeTruck],
+      activeTruck.id,
+      updatedTire,
+      newOdometer,
+    );
+
+    // 2. Jika semua ban sudah diinspeksi ➔ audit bulanan otomatis selesai
+    const isAuditCompleted = isMonthlyAuditDone(inspectedTruck);
+    const finalTruck: TruckFleetTireItem = isAuditCompleted
+      ? {
+          ...inspectedTruck,
+          auditSchedule: completeMonthlyAudit(inspectedTruck.auditSchedule),
+        }
+      : inspectedTruck;
+
     setTruckList((prev) => {
-      return updateTruckTireInspection(
-        prev,
-        activeTruck.id,
-        updatedTire,
-        newOdometer,
-      );
+      return prev.map((t) => {
+        if (t.id === finalTruck.id) {
+          return finalTruck;
+        }
+        return t;
+      });
     });
     setSelectedSlot(
       evaluateWheelSlot(updatedTire.currentPosition, updatedTire, newOdometer),
     );
+
+    if (isAuditCompleted) {
+      addToast(
+        "success",
+        `Audit Bulanan ${activeTruck.unitCode} Selesai!`,
+        `Seluruh ban sudah diinspeksi. Jadwal audit berikutnya: ${finalTruck.auditSchedule.nextAuditSchedule}`,
+      );
+    }
   };
 
   const handleExecuteRotation = (payload: RotationResultPayload) => {

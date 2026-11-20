@@ -207,8 +207,12 @@ export default function App() {
             <TireHistoryView historyLogs={fleet.historyLogs} />
           )}
 
-          {activeView === "cpk-analytics" && <TireAnalyticsView />}
-
+          {activeView === "cpk-analytics" && (
+            <TireAnalyticsView
+              truckList={fleet.truckList}
+              warehouseTires={fleet.warehouseTires}
+            />
+          )}
           {activeView === "audit-schedule" && (
             <TireAuditScheduleView
               truckList={fleet.truckList}
