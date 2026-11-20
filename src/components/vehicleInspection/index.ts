@@ -6,3 +6,6 @@ export { default as BatteryCheckSection } from "./BatteryCheckSection";
 export { default as DriverPhotoConfirmation } from "./DriverPhotoConfirmation";
 export { default as StatusPillGroup } from "./StatusPillGroup";
 export { default as CheckmarkToggle } from "./CheckMarkToggle";
+export * from "./batteryCheck";
+export * from "./confirmation";
+export * from "./physicalCheck";

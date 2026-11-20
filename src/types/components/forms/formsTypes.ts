@@ -140,4 +140,7 @@ export interface FileInputProps extends Omit<
   error?: string;
   helperText?: string;
   capture?: "user" | "environment";
+  variant?: "button" | "dropzone";
+  dropzoneTitle?: string;
+  dropzoneDescription?: ReactNode;
 }

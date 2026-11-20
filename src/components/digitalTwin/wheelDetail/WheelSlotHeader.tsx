@@ -38,20 +38,19 @@ export default function WheelSlotHeader({ slot }: WheelSlotHeaderProps) {
               Toleransi Mekanik +5.000 KM Aktif
             </strong>
             <p className="text-[10px] text-amber-800 mt-0.5">
-              Disetujui oleh:{" "}
-              <strong>{slot.tire.overrideApprovedBy}</strong>. Alasan:{" "}
-              {slot.tire.overrideReason}
+              Disetujui oleh: <strong>{slot.tire.overrideApprovedBy}</strong>.
+              Alasan: {slot.tire.overrideReason}
             </p>
           </div>
         </div>
       )}
 
-      {/* Alarm Pelanggaran Golden Rule */}
+      {/* Alarm Pelanggaran Golden Rule & Penyebab Kritis */}
       {slot.ruleViolations.length > 0 && (
         <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-rose-900 space-y-1">
           <div className="flex items-center gap-1.5 font-bold">
-            <ShieldAlert size={16} className="text-rose-600" />
-            <span>Pelanggaran Aturan Mutlak!</span>
+            <ShieldAlert size={16} className="text-rose-600 shrink-0" />
+            <span>Penyebab Status Kritis / Pelanggaran:</span>
           </div>
           {slot.ruleViolations.map((v, i) => (
             <p key={i} className="text-[11px] leading-relaxed">
@@ -63,4 +62,3 @@ export default function WheelSlotHeader({ slot }: WheelSlotHeaderProps) {
     </div>
   );
 }
-

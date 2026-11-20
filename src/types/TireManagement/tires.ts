@@ -1,4 +1,5 @@
 import { type Dispatch, type SetStateAction } from "react";
+import type { AuditSchedule } from "@/types/TireAuditScheduleView";
 
 /**
  * Standarisasi Kode Posisi Roda:
@@ -104,19 +105,6 @@ export interface WheelSlotEvaluation {
   wearPercentage: number;
   healthStatus: TireHealthStatus;
   ruleViolations: string[]; // Contoh: "PELANGGARAN: Posisi Steer H1 tidak boleh ban vulkanisir (R1)!"
-}
-
-/**
- * Status Jadwal Audit Surveyor
- */
-export interface AuditSchedule {
-  period: string;
-  lastAuditDate: string;
-  nextAuditSchedule: string;
-  status: "PENDING" | "OVERDUE" | "RESCHEDULED" | "COMPLETED";
-  surveyorName: string;
-  rescheduledTo?: string | null;
-  rescheduleReason?: string | null;
 }
 
 export type ActionRecommendation =

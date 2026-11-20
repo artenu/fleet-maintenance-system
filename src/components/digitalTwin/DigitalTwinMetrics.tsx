@@ -4,6 +4,13 @@ import { Grid } from "@/components/layout";
 import { Badge, StatCard } from "@/components/common";
 import { formatThousand } from "@/utils/formatters";
 import type { DigitalTwinMetricsProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
+import { AUDIT_STATUS_CONFIGS } from "@/constants/auditSchedule";
+import {
+  getAuditStatus,
+  getDaysUntilDue,
+  getDueCountdownLabel,
+  getEffectiveDueDate,
+} from "@/utils/auditSchedule";
 
 /**
  * Kartu ringkasan KPI & metrik armada Digital Twin (Grid 4 Kolom)
@@ -11,12 +18,11 @@ import type { DigitalTwinMetricsProps } from "@/types/DigitalTwinView/DigitalTwi
 export default function DigitalTwinMetrics({
   activeTruck,
 }: DigitalTwinMetricsProps) {
-  const auditStatusVariant =
-    activeTruck.auditSchedule.status === "OVERDUE"
-      ? "danger"
-      : activeTruck.auditSchedule.status === "COMPLETED"
-        ? "success"
-        : "warning";
+  const auditStatus = getAuditStatus(activeTruck.auditSchedule);
+  const auditConfig = AUDIT_STATUS_CONFIGS[auditStatus];
+  const auditCountdown = getDueCountdownLabel(
+    getDaysUntilDue(activeTruck.auditSchedule),
+  );
 
   return (
     <Grid cols={1} smCols={2} lgCols={4} gap="md">
@@ -38,18 +44,21 @@ export default function DigitalTwinMetrics({
       />
 
       <StatCard
-        title="Siklus Audit Bulanan"
-        value={activeTruck.auditSchedule.nextAuditSchedule}
+        title="Siklus Audit Ban"
+        value={getEffectiveDueDate(activeTruck.auditSchedule) ?? "-"}
+        subValue={auditCountdown}
         subtitle={
-          <Badge
-            variant={auditStatusVariant}
-            pulse={activeTruck.auditSchedule.status === "OVERDUE"}>
-            {activeTruck.auditSchedule.status}
+          <Badge variant={auditConfig.badgeVariant} pulse={auditConfig.pulse}>
+            {auditConfig.label}
           </Badge>
         }
         icon={CalendarClock}
         variant={
-          activeTruck.auditSchedule.status === "OVERDUE" ? "danger" : "default"
+          auditStatus === "OVERDUE"
+            ? "danger"
+            : auditStatus === "DUE_SOON"
+              ? "warning"
+              : "default"
         }
       />
 
@@ -68,4 +77,3 @@ export default function DigitalTwinMetrics({
     </Grid>
   );
 }
-

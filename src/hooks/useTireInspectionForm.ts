@@ -13,6 +13,7 @@ import {
   checkHasSevereDamage,
   INSPECTION_THRESHOLDS,
 } from "@/constants/digitalTwin";
+import { formatDateOnly } from "@/utils/auditSchedule";
 
 // Re-export untuk backward-compatibility
 export { STANDARD_BRANDS, VISUAL_DAMAGE_OPTIONS };
@@ -111,7 +112,7 @@ export function useTireInspectionForm({
     brand: activeBrandName,
     retreadStatus,
     lastInspectionPercent: physicalPercent,
-    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastInspectionDate: formatDateOnly(new Date()),
     treadDepthMm,
     pressurePsi,
     visualDamages,

@@ -35,6 +35,13 @@ export default function DigitalTwinView({
 }: DigitalTwinViewProps) {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
 
+  // Cari sasis aktif dari hasil perangkaian (Drop & Hook)
+  const activeChassis = chassisList.find(
+    (c) => c.attachedHeadId === activeTruck.id,
+  );
+  const isBobTail = !activeChassis;
+  const currentChassisType = activeChassis?.type || activeTruck.chassisType;
+
   const {
     previewImage,
     setPreviewImage,
@@ -52,36 +59,18 @@ export default function DigitalTwinView({
     hasNoTires,
     isGrounded,
     readinessPercent,
+    expectedTiresCount,
+    installedTiresCount,
+    missingTiresCount,
+    isTiresIncomplete,
   } = useDigitalTwin({
     activeTruck,
     selectedSlot,
+    isBobTail,
+    chassisType: currentChassisType,
     onEmergencySwapSpare,
     onApplyMechanicOverride,
   });
-
-  // Cari sasis aktif dari hasil perangkaian (Drop & Hook)
-  const activeChassis = chassisList.find(
-    (c) => c.attachedHeadId === activeTruck.id,
-  );
-
-  const isBobTail = !activeChassis;
-
-  // 👇 Hitung apakah ban masih belum lengkap terpasang di slot roda
-  const currentChassisType = activeChassis?.type || activeTruck.chassisType;
-  const expectedTiresCount = isBobTail
-    ? 6
-    : currentChassisType === "2_AXLE"
-      ? 14
-      : 18;
-  const installedTiresCount = activeTruck.tires.filter(
-    (t) => t.currentPosition !== "S1",
-  ).length;
-  const isTiresIncomplete =
-    !hasNoTires && installedTiresCount < expectedTiresCount;
-  const missingTiresCount = Math.max(
-    0,
-    expectedTiresCount - installedTiresCount,
-  );
 
   // 🔍 Pemindaian Otomatis Database: Cari truk baru (0 ban) atau yang bannya belum lengkap
   const pendingTireTrucks = useMemo(() => {
@@ -188,10 +177,11 @@ export default function DigitalTwinView({
         isGrounded={isGrounded}
         hasNoTires={hasNoTires}
         criticalTiresCount={criticalTires.length}
+        missingTiresCount={missingTiresCount}
         readinessPercent={readinessPercent}
         isBobTail={isBobTail}
         attachedChassisCode={activeChassis?.chassisCode}
-        chassisType={activeChassis?.type || activeTruck.chassisType}
+        chassisType={currentChassisType}
         chassisLengthCategory={
           activeChassis?.lengthCategory || activeTruck.capacity
         }
@@ -293,6 +283,7 @@ export default function DigitalTwinView({
         {/* Kolom Kanan: Panel Detail Roda Terpilih */}
         <SelectedWheelDetailCard
           selectedSlot={selectedSlot}
+          hasNoTires={hasNoTires}
           onOpenInspection={onOpenInspection}
           onOpenRotation={onOpenRotation}
           onQuickSwapSpare={handleQuickSwapSpare}

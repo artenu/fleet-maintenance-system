@@ -1,5 +1,5 @@
 // src/components/digitalTwin/WheelItem.tsx
-import { HelpCircle, ShieldAlert } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import type { WheelItemProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 import { Badge } from "@/components/common";
 
@@ -76,10 +76,14 @@ export default function WheelItem({
           <p className="font-bold text-[11px] truncate text-slate-900 leading-tight">
             {slot.tire.serialNumber}
           </p>
-          <p className="text-[9px] text-slate-500 truncate">{slot.tire.brand}</p>
+          <p className="text-[9px] text-slate-500 truncate">
+            {slot.tire.brand}
+          </p>
           <div className="flex items-center justify-between text-[9px] mt-1 font-medium text-slate-600">
             <span>Sisa: {slot.remainingKm.toLocaleString("id-ID")} KM</span>
-            <span className="font-bold">{slot.tire.lastInspectionPercent}%</span>
+            <span className="font-bold">
+              {slot.tire.lastInspectionPercent}%
+            </span>
           </div>
         </div>
       ) : (
@@ -90,24 +94,15 @@ export default function WheelItem({
       )}
 
       {/* Progress Bar & Alarm Pelanggaran */}
+      {/* Progress Bar Seragam (Merah untuk Kritis, Kuning untuk Warning, Hijau untuk Good) */}
       {slot.tire && (
-        <div>
-          {hasViolation ? (
-            <div className="flex items-center gap-1 text-[9px] font-bold text-rose-700">
-              <ShieldAlert size={11} />
-              <span>Pelanggaran R0!</span>
-            </div>
-          ) : (
-            <div className="h-1.5 w-full bg-slate-200/80 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${progressBg}`}
-                style={{ width: `${slot.wearPercentage}%` }}
-              />
-            </div>
-          )}
+        <div className="h-1.5 w-full bg-slate-200/80 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${progressBg}`}
+            style={{ width: `${slot.wearPercentage}%` }}
+          />
         </div>
       )}
     </div>
   );
 }
-

@@ -1,18 +1,14 @@
 // src/components/vehicleInspection/BatteryCheckSection.tsx
-import {
-  Zap,
-  Lock,
-  AlertTriangle,
-  ShieldCheck,
-  CheckCircle2,
-} from "lucide-react";
-import { Card, Badge, Checkbox } from "@/components/common";
+import { Zap, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Card, Badge } from "@/components/common";
 import { FormInput } from "@/components/forms";
-import { COMPONENT_CONDITION_OPTIONS } from "@/constants/vehicleInspection";
-import type {
-  BatteryCheckData,
-  ComponentConditionStatus,
-} from "@/types/VehicleInspection";
+import { BATTERY_SLOT_CONFIGS } from "@/constants/vehicleInspection";
+import type { BatteryCheckData } from "@/types/VehicleInspection";
+import {
+  BatteryItemCard,
+  BatterySecurityCard,
+  type SingleBatteryData,
+} from "./batteryCheck";
 
 interface BatteryCheckSectionProps {
   battery: BatteryCheckData;
@@ -27,9 +23,25 @@ export default function BatteryCheckSection({
   const isBattery2Good = battery.battery2.condition === "B";
   const isSecure = battery.caseLockedWithChain;
 
+  // Deteksi nomor seri duplikat / serial kembar (Audit Anti-Fraud)
+  const isDuplicateSerial =
+    Boolean(battery.battery1.serialNumber) &&
+    Boolean(battery.battery2.serialNumber) &&
+    battery.battery1.serialNumber.trim().toLowerCase() ===
+      battery.battery2.serialNumber.trim().toLowerCase();
+
+  const handleUpdateSingleBattery = (
+    key: "battery1" | "battery2",
+    patch: Partial<SingleBatteryData>,
+  ) => {
+    onChangeBattery({
+      [key]: { ...battery[key], ...patch },
+    });
+  };
+
   return (
     <Card className="space-y-4">
-      {/* Title & Info Bar */}
+      {/* 1. Header & Info Bar Seksi 3 */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
           <div className="grid h-8 w-8 place-items-center rounded-xl bg-amber-500 text-white shadow-xs">
@@ -46,7 +58,7 @@ export default function BatteryCheckSection({
           </div>
         </div>
 
-        {/* Status Indikator Aki */}
+        {/* Status Indikator Sistem Kelistrikan */}
         <div className="flex items-center gap-2">
           {isBattery1Good && isBattery2Good && isSecure ? (
             <Badge variant="success" className="text-xs py-1 px-2.5">
@@ -62,248 +74,51 @@ export default function BatteryCheckSection({
         </div>
       </div>
 
-      {/* Grid 2 Aki (Aki 1 & Aki 2) */}
+      {/* Warning Serial Kembar (Anti-Fraud) */}
+      {isDuplicateSerial && (
+        <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+          <AlertTriangle size={14} className="shrink-0 text-amber-600" />
+          <span>
+            <strong>Peringatan Anti-Fraud:</strong> Nomor seri Aki 1 dan Aki 2
+            tercatat identik (<strong>{battery.battery1.serialNumber}</strong>).
+            Pastikan barcode setiap unit aki dicatat terpisah.
+          </span>
+        </div>
+      )}
+
+      {/* 2. Grid Dua Kartu Aki (Aki 1 & Aki 2) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Aki 1 */}
-        <div
-          className={`p-4 rounded-xl border transition-all ${
-            isBattery1Good
-              ? "bg-white border-slate-200"
-              : "bg-rose-50/50 border-rose-200"
-          }`}>
-          <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-              <Zap size={14} className="text-amber-500" />
-              Aki 1 (Kutub Positif Utama / Depan)
-            </span>
-            <Badge
-              variant={isBattery1Good ? "success" : "danger"}
-              className="text-[10px]">
-              {battery.battery1.condition === "B" ? "Normal" : "Ada Kendala"}
-            </Badge>
-          </div>
-
-          <div className="space-y-3">
-            <FormInput
-              label="Merk Aki 1"
-              value={battery.battery1.brand}
-              onChange={(e) =>
-                onChangeBattery({
-                  battery1: { ...battery.battery1, brand: e.target.value },
-                })
-              }
-              placeholder="cth: GS Astra Hybrid / Yuasa"
+        {BATTERY_SLOT_CONFIGS.map((config) => {
+          return (
+            <BatteryItemCard
+              key={config.key}
+              batteryKey={config.key}
+              title={config.title}
+              slotLabel={config.slotLabel}
+              data={battery[config.key]}
+              serialPlaceholder={config.serialPlaceholder}
+              notesPlaceholder={config.notesPlaceholder}
+              onChange={handleUpdateSingleBattery}
             />
-
-            <FormInput
-              label="Nomor Seri / Barcode Aki 1"
-              value={battery.battery1.serialNumber}
-              onChange={(e) =>
-                onChangeBattery({
-                  battery1: {
-                    ...battery.battery1,
-                    serialNumber: e.target.value,
-                  },
-                })
-              }
-              placeholder="cth: GS-2024-08991 (Anti-Tukar)"
-            />
-
-            {/* Status Button Group */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
-                Kondisi Fisik Aki 1
-              </label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {COMPONENT_CONDITION_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() =>
-                      onChangeBattery({
-                        battery1: {
-                          ...battery.battery1,
-                          condition: opt.value as ComponentConditionStatus,
-                        },
-                      })
-                    }
-                    className={`py-1.5 px-1 text-center rounded-lg text-[11px] font-bold transition-all ${
-                      battery.battery1.condition === opt.value
-                        ? opt.value === "B"
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : opt.value === "RM"
-                            ? "bg-amber-600 text-white shadow-xs"
-                            : "bg-rose-600 text-white shadow-xs"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-                    }`}>
-                    {opt.value}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <FormInput
-              label="Catatan Aki 1"
-              value={battery.battery1.notes}
-              onChange={(e) =>
-                onChangeBattery({
-                  battery1: { ...battery.battery1, notes: e.target.value },
-                })
-              }
-              placeholder="cth: Kepala kutub bersih, air aki pas"
-            />
-          </div>
-        </div>
-
-        {/* Aki 2 */}
-        <div
-          className={`p-4 rounded-xl border transition-all ${
-            isBattery2Good
-              ? "bg-white border-slate-200"
-              : "bg-rose-50/50 border-rose-200"
-          }`}>
-          <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-              <Zap size={14} className="text-amber-500" />
-              Aki 2 (Kutub Seri / Belakang)
-            </span>
-            <Badge
-              variant={isBattery2Good ? "success" : "danger"}
-              className="text-[10px]">
-              {battery.battery2.condition === "B" ? "Normal" : "Ada Kendala"}
-            </Badge>
-          </div>
-
-          <div className="space-y-3">
-            <FormInput
-              label="Merk Aki 2"
-              value={battery.battery2.brand}
-              onChange={(e) =>
-                onChangeBattery({
-                  battery2: { ...battery.battery2, brand: e.target.value },
-                })
-              }
-              placeholder="cth: GS Astra Hybrid / Yuasa"
-            />
-
-            <FormInput
-              label="Nomor Seri / Barcode Aki 2"
-              value={battery.battery2.serialNumber}
-              onChange={(e) =>
-                onChangeBattery({
-                  battery2: {
-                    ...battery.battery2,
-                    serialNumber: e.target.value,
-                  },
-                })
-              }
-              placeholder="cth: GS-2024-08992 (Anti-Tukar)"
-            />
-
-            {/* Status Button Group */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
-                Kondisi Fisik Aki 2
-              </label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {COMPONENT_CONDITION_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() =>
-                      onChangeBattery({
-                        battery2: {
-                          ...battery.battery2,
-                          condition: opt.value as ComponentConditionStatus,
-                        },
-                      })
-                    }
-                    className={`py-1.5 px-1 text-center rounded-lg text-[11px] font-bold transition-all ${
-                      battery.battery2.condition === opt.value
-                        ? opt.value === "B"
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : opt.value === "RM"
-                            ? "bg-amber-600 text-white shadow-xs"
-                            : "bg-rose-600 text-white shadow-xs"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-                    }`}>
-                    {opt.value}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <FormInput
-              label="Catatan Aki 2"
-              value={battery.battery2.notes}
-              onChange={(e) =>
-                onChangeBattery({
-                  battery2: { ...battery.battery2, notes: e.target.value },
-                })
-              }
-              placeholder="cth: Baut klem kencang, tidak berkerak"
-            />
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* Bagian Keamanan: Rantai & Gembok Kotak Aki */}
-      <div
-        className={`p-4 rounded-xl border transition-all ${
-          battery.caseLockedWithChain
-            ? "bg-emerald-50/50 border-emerald-200"
-            : "bg-rose-50 border-rose-300"
-        }`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className={`grid h-9 w-9 place-items-center rounded-xl ${
-                battery.caseLockedWithChain
-                  ? "bg-emerald-600 text-white"
-                  : "bg-rose-600 text-white"
-              }`}>
-              {battery.caseLockedWithChain ? (
-                <ShieldCheck size={20} />
-              ) : (
-                <Lock size={20} />
-              )}
-            </div>
-            <div>
-              <Checkbox
-                label="Kotak Aki Tergembok & Dirantai Rapat Sesuai SOP"
-                subLabel="Wajib dikunci rapat sebelum unit diberangkatkan untuk mencegah insiden kehilangan aki di jalan"
-                checked={battery.caseLockedWithChain}
-                onChange={(checked: boolean) =>
-                  onChangeBattery({ caseLockedWithChain: checked })
-                }
-              />
-            </div>
-          </div>
+      {/* 3. Kartu Keamanan: Rantai & Gembok Kotak Aki */}
+      <BatterySecurityCard
+        isLockedWithChain={battery.caseLockedWithChain}
+        onToggleLock={(checked) => {
+          onChangeBattery({ caseLockedWithChain: checked });
+        }}
+      />
 
-          <Badge
-            variant={battery.caseLockedWithChain ? "success" : "danger"}
-            className="text-xs">
-            {battery.caseLockedWithChain ? "Terkunci & Aman" : "BELUM DIGEMBOK"}
-          </Badge>
-        </div>
-
-        {!battery.caseLockedWithChain && (
-          <div className="mt-3 flex items-start gap-2 text-xs text-rose-700 bg-rose-100/60 p-2.5 rounded-lg border border-rose-200">
-            <AlertTriangle size={15} className="shrink-0 mt-0.5" />
-            <span>
-              <strong>PERINGATAN SOP POOL:</strong> Unit dilarang keluar
-              pool/depo jika kotak aki belum dipasangi rantai gembok standar PT
-              ALN!
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Catatan Keseluruhan Sistem Kelistrikan */}
+      {/* 4. Catatan Tambahan Sistem Kelistrikan */}
       <FormInput
         label="Catatan Tambahan Sistem Aki / Kelistrikan"
         value={battery.notes}
-        onChange={(e) => onChangeBattery({ notes: e.target.value })}
+        onChange={(e) => {
+          onChangeBattery({ notes: e.target.value });
+        }}
         placeholder="cth: Kabel grounding sudah diganti baru, voltase alternator normal"
       />
     </Card>

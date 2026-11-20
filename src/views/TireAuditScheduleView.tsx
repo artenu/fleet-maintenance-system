@@ -1,5 +1,5 @@
 // src/views/TireAuditScheduleView.tsx
-import { useAuditSchedule } from "@/hooks/useAuditSchedule";
+import { useAuditSchedule } from "@/hooks/auditSchedule/useAuditSchedule";
 import type { TireAuditScheduleViewProps } from "@/types/TireAuditScheduleView/TireAuditScheduleViewTypes";
 import { Container, PageHeader, Grid } from "@/components/layout";
 import { StatCard } from "@/components/common";
@@ -13,6 +13,7 @@ import {
   Truck,
   ShieldAlert,
   CalendarCheck2,
+  AlarmClock,
 } from "lucide-react";
 
 export default function TireAuditScheduleView({
@@ -27,9 +28,9 @@ export default function TireAuditScheduleView({
     filteredTrucks,
     targetTruck,
     rescheduleReason,
+    extendDays,
+    setExtendDays,
     setRescheduleReason,
-    rescheduleDate,
-    setRescheduleDate,
     handleOpenReschedule,
     handleCloseReschedule,
     handleConfirmReschedule,
@@ -49,12 +50,12 @@ export default function TireAuditScheduleView({
       />
 
       {/* 2. Kartu KPI Kepatuhan Jadwal Audit */}
-      <Grid cols={1} mdCols={2} lgCols={4} gap="md">
+      <Grid cols={1} mdCols={2} lgCols={5} gap="md">
         <StatCard
           title="Total Unit Armada"
           value={`${metrics.totalTrucks} Unit`}
           subValue="Wajib Audit"
-          subtitle="Audit berkala bulanan"
+          subtitle="Audit berkala per 30 hari"
           icon={Truck}
           variant="default"
         />
@@ -67,6 +68,14 @@ export default function TireAuditScheduleView({
           variant="danger"
         />
         <StatCard
+          title="Segera Jatuh Tempo"
+          value={`${metrics.dueSoonCount} Unit`}
+          subValue="H-3"
+          subtitle="Jadwalkan masuk pool"
+          icon={AlarmClock}
+          variant="warning"
+        />
+        <StatCard
           title="Dalam Dispensasi"
           value={`${metrics.rescheduledCount} Unit`}
           subValue="Rescheduled"
@@ -75,9 +84,9 @@ export default function TireAuditScheduleView({
           variant="info"
         />
         <StatCard
-          title="Audit Terjadwal Aman"
-          value={`${metrics.healthyCount} Unit`}
-          subValue="Taat Jadwal"
+          title="Sudah Diaudit"
+          value={`${metrics.completedCount} Unit`}
+          subValue="Siklus Ini"
           subtitle="Kepatuhan operasional normal"
           icon={CalendarCheck2}
           variant="success"
@@ -97,8 +106,8 @@ export default function TireAuditScheduleView({
       {/* 4. Modal Formulir Persetujuan Reschedule */}
       <RescheduleAuditModal
         targetTruck={targetTruck}
-        rescheduleDate={rescheduleDate}
-        onRescheduleDateChange={setRescheduleDate}
+        extendDays={extendDays}
+        onExtendDaysChange={setExtendDays}
         rescheduleReason={rescheduleReason}
         onRescheduleReasonChange={setRescheduleReason}
         onClose={handleCloseReschedule}

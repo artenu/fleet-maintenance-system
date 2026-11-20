@@ -36,8 +36,8 @@ export default function TireHistoryList({
             Riwayat Mutasi & Perubahan Roda Terdaftar
           </h3>
           <p className="text-xs text-slate-500">
-            Menampilkan {filteredLogs.length} dari {totalLogsCount} log transaksi
-            mutasi
+            Menampilkan {filteredLogs.length} dari {totalLogsCount} log
+            transaksi mutasi
           </p>
         </div>
 
@@ -116,4 +116,3 @@ export default function TireHistoryList({
     </Card>
   );
 }
-

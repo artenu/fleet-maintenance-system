@@ -3,9 +3,9 @@ import type { RescheduleAuditModalProps } from "@/types/TireAuditScheduleView/Ti
 
 // 🧱 Komponen Reusable Design System
 import { Modal, Button } from "@/components/common";
-import { DateInput, TextArea } from "@/components/forms";
-
 import { AlertTriangle } from "lucide-react";
+import { NumberInput, TextArea } from "@/components/forms";
+import { getEffectiveDueDate, getExtendedDueDate } from "@/utils/auditSchedule";
 
 /**
  * Modal Formulir Persetujuan Dispensasi Penundaan Audit (Reschedule)
@@ -13,8 +13,8 @@ import { AlertTriangle } from "lucide-react";
  */
 export default function RescheduleAuditModal({
   targetTruck,
-  rescheduleDate,
-  onRescheduleDateChange,
+  extendDays,
+  onExtendDaysChange,
   rescheduleReason,
   onRescheduleReasonChange,
   onClose,
@@ -23,6 +23,10 @@ export default function RescheduleAuditModal({
   if (!targetTruck) {
     return null;
   }
+
+  const isInvalidDays = extendDays < 1;
+  const currentDueDate = getEffectiveDueDate(targetTruck.auditSchedule);
+  const newDueDate = getExtendedDueDate(targetTruck.auditSchedule, extendDays);
 
   return (
     <Modal
@@ -33,10 +37,7 @@ export default function RescheduleAuditModal({
       size="md">
       <form onSubmit={onConfirm} className="space-y-4">
         <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
-          <AlertTriangle
-            size={16}
-            className="text-amber-600 shrink-0 mt-0.5"
-          />
+          <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
           <span>
             Pemberian izin penundaan audit untuk unit{" "}
             <strong>{targetTruck.unitCode}</strong>. Unit diperbolehkan
@@ -44,12 +45,24 @@ export default function RescheduleAuditModal({
           </span>
         </div>
 
-        <DateInput
-          label="Tanggal Baru Jadwal Audit"
-          value={rescheduleDate}
-          onChange={(e) => onRescheduleDateChange(e.target.value)}
+        <NumberInput
+          label="Perpanjang Berapa Hari?"
+          value={extendDays}
+          onChange={onExtendDaysChange}
+          suffixText="Hari"
+          error={isInvalidDays ? "Minimal perpanjangan 1 hari" : undefined}
           required
         />
+
+        <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3 text-xs text-blue-900 space-y-1">
+          <p>
+            Jatuh tempo saat ini: <strong>{currentDueDate ?? "-"}</strong>
+          </p>
+          <p>
+            Jadwal audit baru:{" "}
+            <strong>{isInvalidDays ? "-" : newDueDate}</strong>
+          </p>
+        </div>
 
         <TextArea
           label="Alasan Penundaan (Catatan Kepala Pool)"
@@ -66,6 +79,7 @@ export default function RescheduleAuditModal({
           </Button>
           <Button
             variant="danger"
+            disabled={isInvalidDays}
             type="submit"
             className="bg-blue-600 hover:bg-blue-700">
             Setujui Reschedule
@@ -75,4 +89,3 @@ export default function RescheduleAuditModal({
     </Modal>
   );
 }
-
