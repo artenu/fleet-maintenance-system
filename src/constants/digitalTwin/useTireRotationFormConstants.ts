@@ -1,5 +1,5 @@
 // src/constants/digitalTwin/useTireRotationFormConstants.ts
-import type { WheelPosition } from "@/types/truck/tires";
+import type { WheelPosition } from "@/types/TireManagement/tires";
 import type { SourceTireDestination } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 /**

@@ -1,17 +1,14 @@
 // src/views/TireHistoryView.tsx
 import { useTireHistory } from "@/hooks/useTireHistory";
+import type { TireHistoryViewProps } from "@/types/TireHistoryView/TireHistoryViewTypes";
 import { Container, PageHeader, Grid } from "@/components/layout";
 import { StatCard } from "@/components/common";
 import { TireHistoryList } from "@/components/tireHistory";
-import {
-  History,
-  RotateCw,
-  RefreshCw,
-  Layers,
-  Sparkles,
-} from "lucide-react";
+import { History, RotateCw, RefreshCw, Layers, Sparkles } from "lucide-react";
 
-export default function TireHistoryView() {
+export default function TireHistoryView({
+  historyLogs,
+}: TireHistoryViewProps = {}) {
   const {
     searchTerm,
     setSearchTerm,
@@ -19,7 +16,7 @@ export default function TireHistoryView() {
     setTypeFilter,
     filteredLogs,
     metrics,
-  } = useTireHistory();
+  } = useTireHistory(historyLogs);
 
   return (
     <Container className="space-y-6 pb-12 animate-in fade-in duration-200">

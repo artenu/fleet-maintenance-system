@@ -12,7 +12,7 @@ import {
 import { Container } from "@/components/layout";
 import { Button, Badge } from "@/components/common";
 import { useVehicleInspection } from "@/hooks/useVehicleInspection";
-import type { InspectionTab } from "@/types/vehicleInspection";
+import type { InspectionTab } from "@/types/VehicleInspection";
 
 // 🧱 Komponen Sub-Seksi Form
 import {

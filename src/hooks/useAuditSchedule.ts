@@ -1,6 +1,6 @@
 // src/hooks/useAuditSchedule.ts
 import { useState, useMemo } from "react";
-import type { TruckFleetTireItem } from "@/data/mockTires";
+import type { TruckFleetTireItem } from "@/types/TireManagement/tires";
 import type {
   UseAuditScheduleProps,
   AuditStatusFilter,

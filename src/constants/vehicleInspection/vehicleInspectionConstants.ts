@@ -6,7 +6,7 @@ import type {
   ToolDocItem,
   PhysicalCheckItem,
   BatteryCheckData,
-} from "@/types/vehicleInspection";
+} from "@/types/VehicleInspection";
 
 /**
  * Opsi tombol status kelengkapan Tools & Dokumen (Seksi 1)

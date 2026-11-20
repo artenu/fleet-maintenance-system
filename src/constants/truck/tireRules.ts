@@ -3,7 +3,7 @@ import {
   type RetreadStatus,
   type BrandProfile,
   type WheelPosition,
-} from "../../types/truck/tires";
+} from "../../types/TireManagement/tires";
 
 /**
  * Aturan Gandar Berdasarkan Dokumen Operasional & SOP
@@ -129,8 +129,12 @@ export function getBrandProfile(brandName: string): BrandProfile {
  * Pemetaan Posisi Roda ke Tipe Gandar
  */
 export function getAxleTypeByPosition(position: WheelPosition): AxleType {
-  if (position === "H1" || position === "H2") {return "steer";}
-  if (["H3", "H4", "H5", "H6"].includes(position)) {return "drive";}
+  if (position === "H1" || position === "H2") {
+    return "steer";
+  }
+  if (["H3", "H4", "H5", "H6"].includes(position)) {
+    return "drive";
+  }
   return "trailer";
 }
 

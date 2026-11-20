@@ -3,7 +3,7 @@ import { UserCheck } from "lucide-react";
 import { Select, TextArea } from "@/components/forms";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 import { INSPECTION_RECOMMENDATION_OPTIONS } from "@/constants/digitalTwin";
-import type { ActionRecommendation } from "@/types/truck/tires";
+import type { ActionRecommendation } from "@/types/TireManagement/tires";
 import type { InspectionRecommendationSectionProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 /**
@@ -62,4 +62,3 @@ export default function InspectionRecommendationSection({
     </div>
   );
 }
-

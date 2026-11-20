@@ -4,7 +4,7 @@ import { ClipboardCheck, ArrowRight } from "lucide-react";
 import type {
   WheelSlotEvaluation,
   TireAsset,
-} from "@/types/truck/tires";
+} from "@/types/TireManagement/tires";
 import type {
   TireInspectionModalProps,
   TireInspectionFormContentProps,
@@ -188,6 +188,7 @@ export default function TireInspectionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      size="full"
       title={
         <div className="flex items-center gap-2.5">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-600 shrink-0">
@@ -211,8 +212,7 @@ export default function TireInspectionModal({
             </p>
           </div>
         </div>
-      }
-      size="xl">
+      }>
       <TireInspectionFormContent
         key={`${slot.position}-${slot.tire.id}`}
         onClose={onClose}

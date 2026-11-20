@@ -1,11 +1,11 @@
 // src/types/AddNewTruckView/AddNewTruckViewTypes.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
 import type {
+  TruckFleetTireItem,
   ChassisType,
   RetreadStatus,
   WheelPosition,
   ChassisTrailerAsset,
-} from "@/types/truck/tires";
+} from "@/types/TireManagement/tires";
 import type { SearchableOption } from "@/types/components/forms/formsTypes";
 import type { CentralTruckApiResponseItem } from "@/data/MockCentralTruckApi";
 import type { ChangeEvent } from "react";

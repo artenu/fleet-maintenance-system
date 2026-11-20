@@ -9,7 +9,7 @@ import {
 import { Card, Badge, Button } from "@/components/common";
 import { FormInput, DateInput } from "@/components/forms";
 import { TOOL_DOC_STATUS_OPTIONS } from "@/constants/vehicleInspection";
-import type { ToolDocItem, ToolDocStatus } from "@/types/vehicleInspection";
+import type { ToolDocItem, ToolDocStatus } from "@/types/VehicleInspection";
 
 // 🧱 Subkomponen Reusable
 import StatusPillGroup from "./StatusPillGroup";

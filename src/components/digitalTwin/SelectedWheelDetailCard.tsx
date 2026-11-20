@@ -15,12 +15,13 @@ import { Card, Button } from "@/components/common";
  */
 export default function SelectedWheelDetailCard({
   selectedSlot,
+  hasNoTires = false,
   onOpenInspection,
   onOpenRotation,
   onQuickSwapSpare,
   onOpenOverrideModal,
   onPreviewPhoto,
-  onOpenInstallTire, // 👈 1. Tambahkan ini di sini
+  onOpenInstallTire,
 }: SelectedWheelDetailCardProps) {
   return (
     <Card className="lg:sticky lg:top-20 space-y-4 max-h-[calc(100vh-6.5rem)] overflow-y-auto">
@@ -76,8 +77,7 @@ export default function SelectedWheelDetailCard({
               </Button>
             </div>
           )}
-
-          {/* Baris tombol aksi: Rotasi, Audit, Swap Serep & Toleransi Mekanik */}
+          {/* Baris tombol aksi: Hanya muncul jika ada ban (sudah di-handle WheelActionButtons) */}
           <WheelActionButtons
             slot={selectedSlot}
             onOpenInspection={onOpenInspection}
@@ -85,6 +85,21 @@ export default function SelectedWheelDetailCard({
             onQuickSwapSpare={onQuickSwapSpare}
             onOpenOverrideModal={onOpenOverrideModal}
           />
+        </div>
+      ) : hasNoTires ? (
+        <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/70 p-5 text-center space-y-3 animate-in fade-in duration-150">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-amber-500 text-white mx-auto shadow-xs">
+            <Warehouse size={22} />
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-amber-950">
+              Unit Ini Belum Memiliki Ban
+            </h4>
+            <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+              Silakan klik salah satu kotak roda kosong pada denah di samping
+              untuk mulai memasang ban dari stok gudang pool.
+            </p>
+          </div>
         </div>
       ) : (
         <WheelDetailEmptyState />

@@ -1,6 +1,6 @@
 // src/hooks/useTireInventory.ts
 import { useState, useMemo } from "react";
-import type { RetreadStatus } from "@/types/truck/tires";
+import type { RetreadStatus } from "@/types/TireManagement/tires";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 import type {
   UseTireInventoryProps,
@@ -37,8 +37,7 @@ export function useTireInventory({
         t.brand.toLowerCase().includes(query) ||
         t.size.toLowerCase().includes(query);
 
-      const matchesBrand =
-        selectedBrand === "ALL" || t.brand === selectedBrand;
+      const matchesBrand = selectedBrand === "ALL" || t.brand === selectedBrand;
 
       let matchesRetread = true;
       if (retreadFilter === "R0") {

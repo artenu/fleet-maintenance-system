@@ -1,5 +1,5 @@
 // src/data/mockChassisPool.ts
-import { type ChassisTrailerAsset } from "../types/truck/tires";
+import { type ChassisTrailerAsset } from "../types/TireManagement/tires";
 
 export const mockChassisPoolList: ChassisTrailerAsset[] = [
   // 1. Sasis 20FT Aktif di TRK-001

@@ -4,7 +4,7 @@ import { Badge } from "@/components/common";
 import {
   checkDualWheelMating,
   type DualWheelMatingCheck,
-} from "@/utils/tireCalculations";
+} from "@/utils/tireManagement/tireCalculations";
 import type { DualWheelPairProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 import WheelItem from "../WheelItem";
 
@@ -80,4 +80,3 @@ export default function DualWheelPair({
     </div>
   );
 }
-

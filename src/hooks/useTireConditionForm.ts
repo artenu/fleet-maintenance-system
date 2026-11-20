@@ -1,11 +1,11 @@
 // src/hooks/useTireConditionForm.ts
 import { useState, useMemo } from "react";
-import type { TruckFleetTireItem } from "@/data/mockTires";
 import type {
   ChassisType,
   TireAsset,
   WheelPosition,
-} from "@/types/truck/tires";
+  TruckFleetTireItem,
+} from "@/types/TireManagement/tires";
 import type { SearchableOption } from "@/types/components/forms/formsTypes";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 import { getWheelPositionDescription } from "@/constants/truck";

@@ -2,7 +2,7 @@
 import { Award, ShieldCheck, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/common";
 import type { BadgeVariant } from "@/types/components/common/commonTypes";
-import type { BrandTier } from "@/types/truck/tires";
+import type { BrandTier } from "@/types/TireManagement/tires";
 import type { AnalyticsSortBy } from "@/types/TireAnalyticsView/TireAnalyticsViewTypes";
 
 /**
@@ -87,7 +87,8 @@ export function getCPKTierBadge(tier: string) {
  * Render komponen Badge untuk Peringkat Efisiensi CPK ban
  */
 export function getCPKEfficiencyBadge(rating: string) {
-  const config = CPK_EFFICIENCY_CONFIGS[rating] || CPK_EFFICIENCY_CONFIGS.AVERAGE;
+  const config =
+    CPK_EFFICIENCY_CONFIGS[rating] || CPK_EFFICIENCY_CONFIGS.AVERAGE;
   return (
     <Badge variant={config.badgeVariant} icon={config.icon}>
       {config.label}

@@ -20,7 +20,7 @@ import type {
   InspectionTab,
   PhysicalSectionFilter,
   UseVehicleInspectionProps,
-} from "@/types/vehicleInspection";
+} from "@/types/VehicleInspection";
 
 export function useVehicleInspection({
   initialUnitCode = "TRK-001",

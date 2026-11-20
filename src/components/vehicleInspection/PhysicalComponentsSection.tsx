@@ -13,7 +13,7 @@ import type {
   PhysicalCheckItem,
   PhysicalSectionFilter,
   ComponentConditionStatus,
-} from "@/types/vehicleInspection";
+} from "@/types/VehicleInspection";
 
 // 🧱 Reuse Subkomponen
 import CheckmarkToggle from "./CheckMarkToggle";

@@ -4,7 +4,7 @@ import type {
   WheelSlotEvaluation,
   TireAsset,
   WheelPosition,
-} from "@/types/truck/tires";
+} from "@/types/TireManagement/tires";
 import type {
   TireRotationModalProps,
   TireRotationFormContentProps,
@@ -84,8 +84,12 @@ function TireRotationFormContent({
         <div className="flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50 p-3 text-rose-900 text-xs">
           <ShieldAlert size={18} className="text-rose-600 shrink-0 mt-0.5" />
           <div>
-            <strong className="font-bold">Pelanggaran Aturan Keselamatan!</strong>
-            <p className="text-[11px] mt-0.5 leading-relaxed">{violationError}</p>
+            <strong className="font-bold">
+              Pelanggaran Aturan Keselamatan!
+            </strong>
+            <p className="text-[11px] mt-0.5 leading-relaxed">
+              {violationError}
+            </p>
           </div>
         </div>
       )}
@@ -94,7 +98,9 @@ function TireRotationFormContent({
       {mode === "SWAP_POSITION" ? (
         <SwapPositionSection
           targetPosition={targetPosition}
-          onChangeTargetPosition={(pos: WheelPosition) => setTargetPosition(pos)}
+          onChangeTargetPosition={(pos: WheelPosition) =>
+            setTargetPosition(pos)
+          }
           targetPositionOptions={targetPositionOptions}
           targetTire={targetTire}
           sourcePosition={sourceSlot.position}
@@ -167,6 +173,7 @@ export default function TireRotationModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      size="xl"
       title={
         <div className="flex items-center gap-2.5">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
@@ -184,8 +191,7 @@ export default function TireRotationModal({
             </p>
           </div>
         </div>
-      }
-      size="lg">
+      }>
       <TireRotationFormContent
         key={`${sourceSlot.position}-${sourceSlot.tire.id}`}
         onClose={onClose}

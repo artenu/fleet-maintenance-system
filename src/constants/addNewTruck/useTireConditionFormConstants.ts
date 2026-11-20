@@ -1,5 +1,5 @@
 // src/constants/addNewTruck/useTireConditionFormConstants.ts
-import type { ChassisType, WheelPosition } from "@/types/truck/tires";
+import type { ChassisType, WheelPosition } from "@/types/TireManagement/tires";
 import type { TireInputData } from "@/types/AddNewTruckView/AddNewTruckViewTypes";
 
 /**
@@ -86,19 +86,17 @@ export const INITIAL_TIRES_DATA: Record<string, TireInputData> = {
 /**
  * Data formulir ban default saat memilih slot roda baru
  */
-export const DEFAULT_TIRE_INPUT_TEMPLATE: Omit<
-  TireInputData,
-  "retreadStatus"
-> = {
-  serialNumber: "",
-  brand: "Bridgestone",
-  pattern: "R168",
-  pressurePsi: 110,
-  treadDepthMm: 14.0,
-  physicalPercent: 90,
-  damages: ["Normal"],
-  photoUrl: null,
-};
+export const DEFAULT_TIRE_INPUT_TEMPLATE: Omit<TireInputData, "retreadStatus"> =
+  {
+    serialNumber: "",
+    brand: "Bridgestone",
+    pattern: "R168",
+    pressurePsi: 110,
+    treadDepthMm: 14.0,
+    physicalPercent: 90,
+    damages: ["Normal"],
+    photoUrl: null,
+  };
 
 /**
  * Mendapatkan form data default berdasarkan posisi roda (Steer wajib R0, non-steer R1)

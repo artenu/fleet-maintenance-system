@@ -1,6 +1,6 @@
 // src/components/digitalTwin/rotation/SwapPositionSection.tsx
 import { Select } from "@/components/forms";
-import type { WheelPosition } from "@/types/truck/tires";
+import type { WheelPosition } from "@/types/TireManagement/tires";
 import type { SwapPositionSectionProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 /**
@@ -18,7 +18,9 @@ export default function SwapPositionSection({
       <Select
         label="Pilih Posisi Target Roda di Truk Ini:"
         value={targetPosition}
-        onChange={(e) => onChangeTargetPosition(e.target.value as WheelPosition)}
+        onChange={(e) =>
+          onChangeTargetPosition(e.target.value as WheelPosition)
+        }
         options={targetPositionOptions}
         required
       />
@@ -47,4 +49,3 @@ export default function SwapPositionSection({
     </div>
   );
 }
-

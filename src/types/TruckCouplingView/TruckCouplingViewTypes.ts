@@ -1,6 +1,9 @@
 // src/types/TruckCouplingView/TruckCouplingViewTypes.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
-import type { ChassisTrailerAsset, ChassisType } from "@/types/truck/tires";
+import type {
+  TruckFleetTireItem,
+  ChassisTrailerAsset,
+  ChassisType,
+} from "@/types/TireManagement/tires";
 
 /**
  * Prop interface untuk komponen TruckCouplingView (Drop & Hook)
@@ -89,4 +92,3 @@ export interface TruckCouplingListProps {
 export interface ChassisYardListProps {
   chassisList: ChassisTrailerAsset[];
 }
-

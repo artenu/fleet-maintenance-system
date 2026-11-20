@@ -42,3 +42,24 @@ export interface NavbarProps {
   onToggleSidebar: () => void;
   actions?: ReactNode;
 }
+
+// ================= SIDEBAR =================
+export type TireMaintenanceView =
+  | "fleet-health"
+  | "coupling"
+  | "vehicle-inspection"
+  | "digital-twin"
+  | "add-truck"
+  | "inventory"
+  | "history"
+  | "cpk-analytics"
+  | "audit-schedule";
+
+export interface SidebarProps {
+  activeView: TireMaintenanceView;
+  onSelectView: (view: TireMaintenanceView) => void;
+  overdueCount?: number;
+  incompleteTiresTruckCount?: number;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+}

@@ -20,7 +20,7 @@ import {
   TIRE_DEFECT_OPTIONS,
   getRetreadOptionsForSteer,
 } from "@/constants/addNewTruck";
-import type { RetreadStatus } from "@/types/truck/tires";
+import type { RetreadStatus } from "@/types/TireManagement/tires";
 import type { TireConditionFormCardProps } from "@/types/AddNewTruckView/AddNewTruckViewTypes";
 
 /**
@@ -227,10 +227,14 @@ export default function TireConditionFormCard({
                 src={currentTireForm.photoUrl}
                 alt="Foto Bukti"
                 className="w-full h-full object-cover group-hover:scale-105 transition"
-                onClick={() => onPreviewPhoto(currentTireForm.photoUrl as string)}
+                onClick={() =>
+                  onPreviewPhoto(currentTireForm.photoUrl as string)
+                }
               />
               <div
-                onClick={() => onPreviewPhoto(currentTireForm.photoUrl as string)}
+                onClick={() =>
+                  onPreviewPhoto(currentTireForm.photoUrl as string)
+                }
                 className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1 text-white text-[11px] font-bold">
                 <ZoomIn size={14} />
                 <span>Perbesar</span>

@@ -16,6 +16,11 @@ export default function WheelActionButtons({
   const isSpareSlot = slot.position === "S1";
   const hasTire = Boolean(slot.tire);
 
+  // Jika slot belum memiliki ban, sembunyikan seluruh tombol aksi operasional ban
+  if (!hasTire) {
+    return null;
+  }
+
   return (
     <div className="space-y-2 pt-2 border-t border-slate-100">
       {/* Baris 1: Tombol Aksi Lapangan Reguler */}
@@ -37,7 +42,7 @@ export default function WheelActionButtons({
       </div>
 
       {/* Baris 2: Tombol Emergency Roadside Swap & Toleransi Mekanik */}
-      {hasTire && slot.tire && (
+      {slot.tire && (
         <div className="grid grid-cols-2 gap-2">
           {!isSpareSlot && (
             <Button
@@ -75,4 +80,3 @@ export default function WheelActionButtons({
     </div>
   );
 }
-

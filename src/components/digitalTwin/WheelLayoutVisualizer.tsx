@@ -1,12 +1,12 @@
 // src/components/digitalTwin/WheelLayoutVisualizer.tsx
 import { useState, useMemo } from "react";
-import { evaluateWheelSlot } from "@/utils/tireCalculations";
+import { evaluateWheelSlot } from "@/utils/tireManagement/tireCalculations";
 import type {
   ChassisType,
   TireAsset,
   WheelPosition,
   WheelSlotEvaluation,
-} from "@/types/truck/tires";
+} from "@/types/TireManagement/tires";
 import type { WheelLayoutVisualizerProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 import { Card } from "@/components/common";
 import {
@@ -25,8 +25,11 @@ import { Link2Off } from "lucide-react";
 export default function WheelLayoutVisualizer({
   unitCode,
   plateNumber,
+  brand,
+  driver,
   currentOdometer,
   initialChassisType = "2_AXLE",
+  attachedChassisCode,
   chassisLengthCategory,
   isBobTail = false,
   tires,
@@ -83,8 +86,19 @@ export default function WheelLayoutVisualizer({
         onChangeChassisType={setChassisType}
       />
 
-      {/* 2. Banner Indikator Ringkasan Kesehatan */}
-      <WheelLayoutSummaryBanner criticalCount={criticalCount} />
+      {/* 2. Banner Indikator Ringkasan Identitas Armada & Kesehatan Roda */}
+      <WheelLayoutSummaryBanner
+        criticalCount={criticalCount}
+        unitCode={unitCode}
+        plateNumber={plateNumber}
+        brand={brand}
+        driver={driver}
+        currentOdometer={currentOdometer}
+        attachedChassisCode={attachedChassisCode}
+        chassisType={chassisType}
+        chassisLengthCategory={chassisLengthCategory}
+        isBobTail={isBobTail}
+      />
 
       {/* 3. Denah Tata Letak Visual Fisik Roda */}
       <div className="space-y-4 py-2">

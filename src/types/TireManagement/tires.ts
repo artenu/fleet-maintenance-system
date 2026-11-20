@@ -1,3 +1,5 @@
+import { type Dispatch, type SetStateAction } from "react";
+
 /**
  * Standarisasi Kode Posisi Roda:
  * - Head (H): Gandar Steer (H1, H2), Gandar Drive (H3, H4, H5, H6), Ban Serep (S1)
@@ -173,4 +175,29 @@ export interface ChassisTrailerAsset {
   wheelCount: 14 | 18; // Edge case: Sasis 40ft bisa 14 ban atau 18 ban
   attachedHeadId: string | null; // ID Tractor Head yang sedang menggandeng
   status: "ATTACHED" | "STANDALONE_POOL" | "UNDER_REPAIR";
+}
+
+export interface UseTireOperationsProps {
+  truckList: TruckFleetTireItem[];
+  setTruckList: Dispatch<SetStateAction<TruckFleetTireItem[]>>;
+  activeTruck: TruckFleetTireItem;
+  addToast: (
+    type: "success" | "warning" | "info",
+    title: string,
+    description?: string,
+  ) => void;
+}
+
+export interface TruckFleetTireItem {
+  id: string;
+  unitCode: string;
+  plateNumber: string;
+  brand: string;
+  driver: string;
+  capacity: "20FT" | "40FT";
+  chassisType: ChassisType;
+  currentOdometer: number;
+  lastIotSync: string;
+  auditSchedule: AuditSchedule;
+  tires: TireAsset[];
 }

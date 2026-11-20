@@ -1,6 +1,8 @@
 // src/utils/dashboard/fleetAnalysis.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
-import type { ChassisTrailerAsset } from "@/types/truck/tires";
+import type {
+  TruckFleetTireItem,
+  ChassisTrailerAsset,
+} from "@/types/TireManagement/tires";
 import type {
   FleetAnalysisItem,
   FleetFilterTab,
@@ -128,4 +130,3 @@ export function calculateFleetSummaryStats(
     standbyChassisCount,
   };
 }
-
