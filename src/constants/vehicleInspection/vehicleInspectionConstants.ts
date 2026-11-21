@@ -7,6 +7,8 @@ import type {
   PhysicalCheckItem,
   BatteryCheckData,
 } from "@/types/VehicleInspection";
+import type { InspectionTab } from "@/types/VehicleInspection";
+import { Wrench, Truck, SlidersHorizontal, Zap, Camera } from "lucide-react";
 
 /**
  * Opsi tombol status kelengkapan Tools & Dokumen (Seksi 1)
@@ -454,4 +456,20 @@ export const DEFAULT_INSPECTION_LOCATIONS = [
   "Pool Marunda Logistik (Jakarta Utara)",
   "Depo Tanjung Priok (Dermaga)",
   "Pool Transit Cikarang Dry Port",
+];
+
+/**
+ * TABS Constants Inspection Surveyor
+ */
+export const INSPECTION_TABS: Array<{
+  id: InspectionTab;
+  label: string;
+  icon: typeof Truck;
+  step: number;
+}> = [
+  { id: "HEADER", label: "Identitas Unit", icon: Truck, step: 1 },
+  { id: "TOOLS", label: "Tools & Dokumen", icon: Wrench, step: 2 },
+  { id: "PHYSICAL", label: "50 Item Fisik", icon: SlidersHorizontal, step: 3 },
+  { id: "BATTERY", label: "Cek Aki 24V", icon: Zap, step: 4 },
+  { id: "CONFIRMATION", label: "Foto & BAP", icon: Camera, step: 5 },
 ];

@@ -1,18 +1,9 @@
 // src/views/VehicleInspectionView.tsx
-import {
-  Truck,
-  Wrench,
-  SlidersHorizontal,
-  Zap,
-  Camera,
-  Printer,
-  CheckCircle2,
-  FileCheck2,
-} from "lucide-react";
+import { Printer, CheckCircle2, FileCheck2 } from "lucide-react";
 import { Container } from "@/components/layout";
 import { Button, Badge } from "@/components/common";
 import { useVehicleInspection } from "@/hooks/useVehicleInspection";
-import type { InspectionTab } from "@/types/VehicleInspection";
+import { INSPECTION_TABS } from "@/constants/vehicleInspection/vehicleInspectionConstants";
 
 // 🧱 Komponen Sub-Seksi Form
 import {
@@ -26,19 +17,6 @@ import {
 interface VehicleInspectionViewProps {
   onSuccessSubmit?: (unitCode: string) => void;
 }
-
-const TABS: Array<{
-  id: InspectionTab;
-  label: string;
-  icon: typeof Truck;
-  step: number;
-}> = [
-  { id: "HEADER", label: "Identitas Unit", icon: Truck, step: 1 },
-  { id: "TOOLS", label: "Tools & Dokumen", icon: Wrench, step: 2 },
-  { id: "PHYSICAL", label: "50 Item Fisik", icon: SlidersHorizontal, step: 3 },
-  { id: "BATTERY", label: "Cek Aki 24V", icon: Zap, step: 4 },
-  { id: "CONFIRMATION", label: "Foto & BAP", icon: Camera, step: 5 },
-];
 
 export default function VehicleInspectionView({
   onSuccessSubmit,
@@ -87,6 +65,16 @@ export default function VehicleInspectionView({
     window.print();
   };
 
+  const currentTabIndex = INSPECTION_TABS.findIndex(
+    (tab) => tab.id === activeTab,
+  );
+  const prevTab =
+    currentTabIndex > 0 ? INSPECTION_TABS[currentTabIndex - 1] : null;
+  const nextTab =
+    currentTabIndex < INSPECTION_TABS.length - 1
+      ? INSPECTION_TABS[currentTabIndex + 1]
+      : null;
+
   return (
     <Container className="space-y-5 pb-16 animate-in fade-in duration-200">
       {/* 1. Header Banner & Navigasi Cepat */}
@@ -132,19 +120,18 @@ export default function VehicleInspectionView({
 
       {/* 2. Stepper Tab Navigasi Form 5 Langkah */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        {TABS.map((tab) => {
+        {INSPECTION_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
 
           return (
-            <button
+            <Button
               key={tab.id}
-              type="button"
+              variant={isActive ? "secondary" : "outline"}
+              size="sm"
               onClick={() => setActiveTab(tab.id)}
-              className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
-                isActive
-                  ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/10"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+              className={`py-4 justify-start text-left w-full transition-all ${
+                isActive ? "!bg-blue-600" : "bg-white"
               }`}>
               <div
                 className={`grid h-7 w-7 place-items-center rounded-lg text-xs font-black shrink-0 ${
@@ -157,7 +144,7 @@ export default function VehicleInspectionView({
               <div className="min-w-0">
                 <span
                   className={`block text-[10px] font-bold uppercase tracking-wider ${
-                    isActive ? "text-slate-300" : "text-slate-400"
+                    isActive ? "text-blue-100" : "text-slate-400"
                   }`}>
                   Langkah {tab.step}
                 </span>
@@ -165,7 +152,7 @@ export default function VehicleInspectionView({
                   {tab.label}
                 </span>
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -173,134 +160,85 @@ export default function VehicleInspectionView({
       {/* 3. Konten Formulir Berdasarkan Tab Aktif */}
       <div className="space-y-5">
         {activeTab === "HEADER" && (
-          <div className="space-y-4">
-            <InspectionHeaderCard
-              header={header}
-              onSelectTruck={handleSelectTruckFromDatabase}
-              truckOptions={truckOptions}
-              onChangeHeader={updateHeader}
-            />
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => setActiveTab("TOOLS")}
-                className="text-xs font-bold bg-blue-600 text-white">
-                Lanjut ke Tools & Dokumen →
-              </Button>
-            </div>
-          </div>
+          <InspectionHeaderCard
+            header={header}
+            onSelectTruck={handleSelectTruckFromDatabase}
+            truckOptions={truckOptions}
+            onChangeHeader={updateHeader}
+          />
         )}
 
         {activeTab === "TOOLS" && (
-          <div className="space-y-4">
-            <ToolsDocumentSection
-              toolDocs={toolDocs}
-              onUpdateStatus={updateToolDocStatus}
-              onUpdateExpiry={updateToolDocExpiry}
-              onUpdateNotes={updateToolDocNotes}
-            />
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setActiveTab("HEADER")}
-                className="text-xs font-bold">
-                ← Kembali ke Identitas
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => setActiveTab("PHYSICAL")}
-                className="text-xs font-bold bg-blue-600 text-white">
-                Lanjut ke 50 Item Fisik →
-              </Button>
-            </div>
-          </div>
+          <ToolsDocumentSection
+            toolDocs={toolDocs}
+            onUpdateStatus={updateToolDocStatus}
+            onUpdateExpiry={updateToolDocExpiry}
+            onUpdateNotes={updateToolDocNotes}
+          />
         )}
 
         {activeTab === "PHYSICAL" && (
-          <div className="space-y-4">
-            <PhysicalComponentsSection
-              items={physicalChecks}
-              allItems={allPhysicalChecks}
-              currentSection={physicalSection}
-              searchQuery={searchQuery}
-              onChangeSection={setPhysicalSection}
-              onChangeSearch={setSearchQuery}
-              onUpdateStatus={updatePhysicalCheckStatus}
-              onUpdateNotes={updatePhysicalCheckNotes}
-              onSetAllGood={setAllPhysicalChecksGood}
-            />
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setActiveTab("TOOLS")}
-                className="text-xs font-bold">
-                ← Kembali ke Tools
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => setActiveTab("BATTERY")}
-                className="text-xs font-bold bg-blue-600 text-white">
-                Lanjut ke Cek Aki 24V →
-              </Button>
-            </div>
-          </div>
+          <PhysicalComponentsSection
+            items={physicalChecks}
+            allItems={allPhysicalChecks}
+            currentSection={physicalSection}
+            searchQuery={searchQuery}
+            onChangeSection={setPhysicalSection}
+            onChangeSearch={setSearchQuery}
+            onUpdateStatus={updatePhysicalCheckStatus}
+            onUpdateNotes={updatePhysicalCheckNotes}
+            onSetAllGood={setAllPhysicalChecksGood}
+          />
         )}
 
         {activeTab === "BATTERY" && (
-          <div className="space-y-4">
-            <BatteryCheckSection
-              battery={battery}
-              onChangeBattery={updateBattery}
-            />
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setActiveTab("PHYSICAL")}
-                className="text-xs font-bold">
-                ← Kembali ke 50 Item Fisik
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => setActiveTab("CONFIRMATION")}
-                className="text-xs font-bold bg-blue-600 text-white">
-                Lanjut ke Foto Supir & Pengesahan →
-              </Button>
-            </div>
-          </div>
+          <BatteryCheckSection
+            battery={battery}
+            onChangeBattery={updateBattery}
+          />
         )}
 
         {activeTab === "CONFIRMATION" && (
-          <div className="space-y-4">
-            <DriverPhotoConfirmation
-              header={header}
-              driverPhotoUrl={driverPhotoUrl}
-              onPhotoCapture={handleDriverPhotoCapture}
-              onRemovePhoto={removeDriverPhoto}
-              overallNotes={overallNotes}
-              onChangeOverallNotes={setOverallNotes}
-              metrics={metrics}
-              isSubmitted={isSubmitted}
-              onSubmit={handleSubmitInspection}
-              onReset={handleResetForm}
-            />
-            <div className="flex justify-start">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setActiveTab("BATTERY")}
-                className="text-xs font-bold">
-                ← Kembali ke Cek Aki
-              </Button>
-            </div>
-          </div>
+          <DriverPhotoConfirmation
+            header={header}
+            driverPhotoUrl={driverPhotoUrl}
+            onPhotoCapture={handleDriverPhotoCapture}
+            onRemovePhoto={removeDriverPhoto}
+            overallNotes={overallNotes}
+            onChangeOverallNotes={setOverallNotes}
+            metrics={metrics}
+            isSubmitted={isSubmitted}
+            onSubmit={handleSubmitInspection}
+            onReset={handleResetForm}
+          />
         )}
+
+        {/* 4. Universal Step Navigation Buttons (Dinamis dari TABS) */}
+        <div className="flex items-center justify-between pt-2">
+          {prevTab ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveTab(prevTab.id)}
+              className="text-xs font-bold">
+              ← Kembali ke {prevTab.label}
+            </Button>
+          ) : (
+            <div /> /* Spacer agar tombol lanjut tetap di kanan saat tab pertama */
+          )}
+
+          {nextTab && (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => setActiveTab(nextTab.id)}
+              className="text-xs font-bold text-white">
+              Lanjut ke {nextTab.label} →
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* 4. Notifikasi Banner Jika BAP Sudah Disahkan */}
