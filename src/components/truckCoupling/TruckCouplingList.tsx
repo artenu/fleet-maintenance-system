@@ -110,14 +110,25 @@ export default function TruckCouplingList({
               {/* Tombol Aksi Drop & Hook */}
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 {isCoupled ? (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    icon={Unlink}
-                    onClick={() => onUncouple(truck.id)}
-                    className="border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100">
-                    Lepas Sasis (Drop to Pool)
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={Link2}
+                      disabled={availableChassisCount === 0}
+                      onClick={() => onOpenHookModal(truck.id)}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-50 font-bold">
+                      Ganti Sasis
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={Unlink}
+                      onClick={() => onUncouple(truck.id)}
+                      className="border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold">
+                      Lepas Sasis
+                    </Button>
+                  </>
                 ) : (
                   <Button
                     variant="primary"
@@ -125,7 +136,7 @@ export default function TruckCouplingList({
                     icon={Link2}
                     disabled={availableChassisCount === 0}
                     onClick={() => onOpenHookModal(truck.id)}
-                    className="bg-blue-600 hover:bg-blue-700 shadow-blue-500/20">
+                    className="bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 font-bold">
                     Kaitkan Sasis (Hook)
                   </Button>
                 )}
@@ -137,4 +148,3 @@ export default function TruckCouplingList({
     </div>
   );
 }
-

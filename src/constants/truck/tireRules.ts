@@ -3,7 +3,7 @@ import {
   type RetreadStatus,
   type BrandProfile,
   type WheelPosition,
-} from "../../types/truck/tires";
+} from "../../types/TireManagement/tires";
 
 /**
  * Aturan Gandar Berdasarkan Dokumen Operasional & SOP
@@ -129,8 +129,12 @@ export function getBrandProfile(brandName: string): BrandProfile {
  * Pemetaan Posisi Roda ke Tipe Gandar
  */
 export function getAxleTypeByPosition(position: WheelPosition): AxleType {
-  if (position === "H1" || position === "H2") {return "steer";}
-  if (["H3", "H4", "H5", "H6"].includes(position)) {return "drive";}
+  if (position === "H1" || position === "H2") {
+    return "steer";
+  }
+  if (["H3", "H4", "H5", "H6"].includes(position)) {
+    return "drive";
+  }
   return "trailer";
 }
 
@@ -174,3 +178,17 @@ export const WHEEL_LAYOUT_CONFIG = {
     },
   },
 };
+
+/**
+ * Pilihan opsi konfigurasi sumbu sasis trailer armada
+ */
+export const CHASSIS_CONFIG_OPTIONS = [
+  {
+    value: "2_AXLE",
+    label: "2 Sumbu • 14 Ban (Trailer 20ft / 40ft Pendek)",
+  },
+  {
+    value: "3_AXLE",
+    label: "3 Sumbu • 18 Ban (Trailer 40ft Standar)",
+  },
+];

@@ -7,17 +7,13 @@ import type {
 // 🧱 Komponen Reusable Design System
 import { Card, Badge } from "@/components/common";
 import { SearchInput, Select } from "@/components/forms";
-
 import {
-  RotateCw,
-  PlusCircle,
-  RefreshCw,
-  Trash2,
-  Filter,
-  User,
-  Calendar,
-  History,
-} from "lucide-react";
+  HISTORY_TYPE_FILTER_OPTIONS,
+  getHistoryActionBadge,
+  getHistoryActionIcon,
+} from "@/constants/tireHistory";
+
+import { Filter, User, Calendar } from "lucide-react";
 
 /**
  * Komponen List Riwayat Mutasi & Rotasi Roda (Audit Trail)
@@ -31,36 +27,6 @@ export default function TireHistoryList({
   typeFilter,
   onTypeFilterChange,
 }: TireHistoryListProps) {
-  const getActionBadge = (type: HistoryLogType | string) => {
-    switch (type) {
-      case "ROTASI_GANDAR":
-        return <Badge variant="info">Rotasi Gandar</Badge>;
-      case "GANTI_BARU":
-        return <Badge variant="success">Pasang Baru (R0)</Badge>;
-      case "VULKANISIR":
-        return <Badge variant="warning">Kirim Vulkanisir</Badge>;
-      case "AFKIR":
-        return <Badge variant="danger">Afkir (Scrap)</Badge>;
-      default:
-        return <Badge variant="neutral">{type}</Badge>;
-    }
-  };
-
-  const getActionIcon = (type: HistoryLogType | string) => {
-    switch (type) {
-      case "ROTASI_GANDAR":
-        return <RotateCw size={16} className="text-blue-600" />;
-      case "GANTI_BARU":
-        return <PlusCircle size={16} className="text-emerald-600" />;
-      case "VULKANISIR":
-        return <RefreshCw size={16} className="text-amber-600" />;
-      case "AFKIR":
-        return <Trash2 size={16} className="text-rose-600" />;
-      default:
-        return <History size={16} className="text-slate-600" />;
-    }
-  };
-
   return (
     <Card className="space-y-4">
       {/* Toolbar Header & Filter */}
@@ -70,8 +36,8 @@ export default function TireHistoryList({
             Riwayat Mutasi & Perubahan Roda Terdaftar
           </h3>
           <p className="text-xs text-slate-500">
-            Menampilkan {filteredLogs.length} dari {totalLogsCount} log transaksi
-            mutasi
+            Menampilkan {filteredLogs.length} dari {totalLogsCount} log
+            transaksi mutasi
           </p>
         </div>
 
@@ -93,13 +59,7 @@ export default function TireHistoryList({
               onChange={(e) =>
                 onTypeFilterChange(e.target.value as HistoryLogType)
               }
-              options={[
-                { value: "ALL", label: "Semua Jenis Aksi" },
-                { value: "ROTASI_GANDAR", label: "Rotasi Gandar" },
-                { value: "GANTI_BARU", label: "Pasang Baru (R0)" },
-                { value: "VULKANISIR", label: "Pengiriman Vulkanisir" },
-                { value: "AFKIR", label: "Afkir Total (Scrap)" },
-              ]}
+              options={HISTORY_TYPE_FILTER_OPTIONS}
             />
           </div>
         </div>
@@ -114,14 +74,14 @@ export default function TireHistoryList({
               className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 hover:bg-white hover:border-blue-200 hover:shadow-xs transition duration-150">
               <div className="flex items-start gap-3.5 max-w-3xl">
                 <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-white border border-slate-200 shadow-2xs shrink-0">
-                  {getActionIcon(item.type)}
+                  {getHistoryActionIcon(item.type)}
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-black text-slate-900 text-sm tracking-wide">
                       {item.truck}
                     </span>
-                    {getActionBadge(item.type)}
+                    {getHistoryActionBadge(item.type)}
                     <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
                       <Calendar size={11} />
                       {item.date}
@@ -156,4 +116,3 @@ export default function TireHistoryList({
     </Card>
   );
 }
-

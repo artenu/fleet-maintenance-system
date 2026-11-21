@@ -7,7 +7,6 @@ import type {
 // 🧱 Komponen Reusable Design System
 import {
   Card,
-  Badge,
   Table,
   TableHeader,
   TableBody,
@@ -16,6 +15,10 @@ import {
   TableCell,
 } from "@/components/common";
 import { SearchInput, Select } from "@/components/forms";
+import {
+  TIRE_INVENTORY_FILTER_OPTIONS,
+  getTireCasingBadge,
+} from "@/constants/tireInventory";
 
 import { Filter, CheckCircle2, Warehouse, Clock, Lock } from "lucide-react";
 
@@ -44,8 +47,8 @@ export default function TireInventoryTable({
             Daftar Ban Standby di Gudang Pool
           </h3>
           <p className="text-xs text-slate-500">
-            Menampilkan {filteredTires.length} dari {totalWarehouseTires} ban yang
-            tersedia
+            Menampilkan {filteredTires.length} dari {totalWarehouseTires} ban
+            yang tersedia
           </p>
         </div>
 
@@ -67,14 +70,7 @@ export default function TireInventoryTable({
               onChange={(e) =>
                 onRetreadFilterChange(e.target.value as RetreadFilterType)
               }
-              options={[
-                { value: "ALL", label: "Semua Casing" },
-                { value: "R0", label: "Hanya R0 (Baru)" },
-                { value: "RETREAD", label: "Vulkanisir (R1-R3)" },
-                { value: "R1", label: "Vulkanisir R1" },
-                { value: "R2", label: "Vulkanisir R2" },
-                { value: "R3", label: "Vulkanisir R3" },
-              ]}
+              options={TIRE_INVENTORY_FILTER_OPTIONS}
             />
           </div>
 
@@ -124,19 +120,7 @@ export default function TireInventoryTable({
                   {t.brand}
                 </TableCell>
                 <TableCell className="text-slate-600">{t.size}</TableCell>
-                <TableCell>
-                  {t.retreadStatus === "R0" ? (
-                    <Badge variant="info">R0 (Baru)</Badge>
-                  ) : t.retreadStatus === "R1" ? (
-                    <Badge variant="warning">R1 (Vulkanisir 1x)</Badge>
-                  ) : t.retreadStatus === "R2" ? (
-                    <Badge variant="warning">R2 (Vulkanisir 2x)</Badge>
-                  ) : t.retreadStatus === "R3" ? (
-                    <Badge variant="danger">R3 (Batas Akhir)</Badge>
-                  ) : (
-                    <Badge variant="danger">Afkir</Badge>
-                  )}
-                </TableCell>
+                <TableCell>{getTireCasingBadge(t.retreadStatus)}</TableCell>
                 <TableCell className="font-black text-slate-800">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 size={13} className="text-emerald-600" />
@@ -191,4 +175,3 @@ export default function TireInventoryTable({
     </Card>
   );
 }
-

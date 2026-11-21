@@ -1,6 +1,9 @@
 // src/hooks/useTruckCoupling.ts
 import { useState, useMemo } from "react";
-import type { ChassisTrailerAsset, ChassisType } from "@/types/truck/tires";
+import type {
+  ChassisTrailerAsset,
+  ChassisType,
+} from "@/types/TireManagement/tires";
 import type {
   UseTruckCouplingProps,
   UseTruckCouplingReturn,
@@ -66,13 +69,22 @@ export function useTruckCoupling({
     setIsHookModalOpen(false);
   };
 
+  // 👈 Tambahkan handler ini agar saat sasis diganti di dropdown, konfigurasi rodanya ikut sinkron
+  const handleSelectChassis = (chassisId: string) => {
+    setSelectedChassisId(chassisId);
+    const target = chassisList.find((c) => c.id === chassisId);
+    if (target) {
+      setOverrideWheelConfig(target.type);
+    }
+  };
+
   return {
     isHookModalOpen,
     setIsHookModalOpen,
     selectedTruckId,
     setSelectedTruckId,
     selectedChassisId,
-    setSelectedChassisId,
+    setSelectedChassisId: handleSelectChassis,
     overrideWheelConfig,
     setOverrideWheelConfig,
     availableChassis,
@@ -82,4 +94,3 @@ export function useTruckCoupling({
     handleExecuteHook,
   };
 }
-

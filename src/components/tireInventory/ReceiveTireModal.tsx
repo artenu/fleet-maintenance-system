@@ -7,12 +7,16 @@ import {
   Lock,
   CheckCircle2,
 } from "lucide-react";
-import type { RetreadStatus, TireAsset } from "@/types/truck/tires";
+import type { RetreadStatus, TireAsset } from "@/types/TireManagement/tires";
 import type {
   ReceiveMode,
   ReceiveTireModalProps,
 } from "@/types/TireInventoryView/TireInventoryViewTypes";
 import { BRAND_PROFILES } from "@/constants/truck/tireRules";
+import {
+  TIRE_SIZE_OPTIONS,
+  RETREAD_CASING_RECEIVE_OPTIONS,
+} from "@/constants/tireInventory";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 
 // 🧱 Komponen Reusable Design System
@@ -78,8 +82,8 @@ export default function ReceiveTireModal({
       onClose={onClose}
       title="Penerimaan Ban Masuk Gudang Pool"
       description="Registrasi aset ban baru atau penerimaan kembali hasil vulkanisir"
-      size="lg">
-      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+      size="xl">
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs h-100">
         {/* Tab Pilihan Mode Penerimaan */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <Button
@@ -153,11 +157,7 @@ export default function ReceiveTireModal({
             label="Ukuran & Spesifikasi"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            options={[
-              { value: "10.00-20 16PR", label: "10.00-20 16PR (Standar Truk)" },
-              { value: "1000 R20", label: "1000 R20 (Radial)" },
-              { value: "11R22.5", label: "11R22.5 (Tubeless)" },
-            ]}
+            options={TIRE_SIZE_OPTIONS}
             required
           />
 
@@ -174,15 +174,10 @@ export default function ReceiveTireModal({
             <Select
               label="Status Casing Ban"
               value={retreadStatus}
-              onChange={(e) => setRetreadStatus(e.target.value as RetreadStatus)}
-              options={[
-                { value: "R1", label: "R1 (Vulkanisir ke-1)" },
-                { value: "R2", label: "R2 (Vulkanisir ke-2)" },
-                {
-                  value: "R3",
-                  label: "R3 (Vulkanisir ke-3 - Batas Maksimal)",
-                },
-              ]}
+              onChange={(e) =>
+                setRetreadStatus(e.target.value as RetreadStatus)
+              }
+              options={RETREAD_CASING_RECEIVE_OPTIONS}
               required
             />
           )}
@@ -222,14 +217,9 @@ export default function ReceiveTireModal({
               </label>
               <div className="h-10 flex items-center gap-2 rounded-xl border border-dashed border-amber-300 bg-amber-50/80 px-3 text-xs text-amber-900">
                 <Lock size={15} className="text-amber-600 shrink-0" />
-                <div>
-                  <span className="font-bold block text-[11px] text-amber-800">
-                    Informasi Harga Terproteksi
-                  </span>
-                  <span className="text-[10px] text-amber-600 block">
-                    Hanya dapat diakses oleh Finance & Admin
-                  </span>
-                </div>
+                <span className="font-bold block text-[11px] text-amber-800">
+                  Informasi Harga Terproteksi
+                </span>
               </div>
             </div>
           )}

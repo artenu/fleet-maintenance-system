@@ -45,3 +45,6 @@ export interface TireHistoryListProps {
   onTypeFilterChange: (type: HistoryLogType) => void;
 }
 
+export interface TireHistoryViewProps {
+  historyLogs?: HistoryLogItem[];
+}

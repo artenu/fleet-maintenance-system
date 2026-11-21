@@ -1,52 +1,60 @@
 // src/hooks/useTireHistory.ts
 import { useState, useMemo } from "react";
 import type {
-  HistoryLogType,
   HistoryLogItem,
+  HistoryLogType,
   HistoryMetrics,
 } from "@/types/TireHistoryView/TireHistoryViewTypes";
+import {
+  INITIAL_HISTORY_LOGS,
+  initialHistoryLogs,
+} from "@/constants/tireHistory";
 
-export const initialHistoryLogs: HistoryLogItem[] = [
-  {
-    id: "LOG-001",
-    date: "02 Nov 2026, 09:15",
-    truck: "TRK-003",
-    desc: "Rotasi Ban Serial GT-900101 dari Gandar Steer H1 dipindah ke Trailer C1 akibat keausan > 60.000 KM.",
-    pic: "Slamet Riyadi (Mekanik Senior)",
-    type: "ROTASI_GANDAR",
-  },
-  {
-    id: "LOG-002",
-    date: "24 Okt 2026, 14:30",
-    truck: "TRK-001",
-    desc: "Pemasangan Ban Baru R0 Bridgestone (BS-998821) ke gandar Steer H1 dari stok gudang pool.",
-    pic: "Bambang Sudiro (Surveyor)",
-    type: "GANTI_BARU",
-  },
-  {
-    id: "LOG-003",
-    date: "15 Okt 2026, 11:00",
-    truck: "TRK-003",
-    desc: "Pengiriman Ban Bekas BX-317 ke Rekanan Vulkanisir Karet Medan Boxer (Status R1 -> R2).",
-    pic: "Eko Wahyudi (Admin Pool)",
-    type: "VULKANISIR",
-  },
-  {
-    id: "LOG-004",
-    date: "05 Okt 2026, 16:45",
-    truck: "TRK-001",
-    desc: "Afkir total ban benjol dan kawat sobek di posisi C5. Ban dipindahkan ke area scrap.",
-    pic: "Slamet Riyadi (Mekanik)",
-    type: "AFKIR",
-  },
-];
+// Re-export untuk backward-compatibility
+export { initialHistoryLogs };
 
-export function useTireHistory() {
+export function useTireHistory(externalLogs?: HistoryLogItem[]) {
+  // 1. State internal (jika hook digunakan secara mandiri tanpa props external)
+  const [internalLogs, setInternalLogs] =
+    useState<HistoryLogItem[]>(INITIAL_HISTORY_LOGS);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<HistoryLogType>("ALL");
 
+  // Jika parent meneruskan logs external, prioritaskan data tersebut
+  const logs = externalLogs !== undefined ? externalLogs : internalLogs;
+
+  // 2. Fungsi menambahkan catatan riwayat audit trail baru
+  const appendHistoryLog = (
+    truck: string,
+    desc: string,
+    type: "ROTASI_GANDAR" | "GANTI_BARU" | "VULKANISIR" | "AFKIR",
+    pic: string = "Budi Santoso (Surveyor)",
+  ) => {
+    const formattedDate = new Intl.DateTimeFormat("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+
+    const newLog: HistoryLogItem = {
+      id: `LOG-${Date.now().toString().slice(-4)}`,
+      date: formattedDate,
+      truck,
+      desc,
+      pic,
+      type,
+    };
+
+    setInternalLogs((prev) => {
+      return [newLog, ...prev];
+    });
+  };
+
+  // 3. Filter riwayat berdasarkan pencarian teks dan dropdown kategori aksi
   const filteredLogs = useMemo(() => {
-    return initialHistoryLogs.filter((log) => {
+    return logs.filter((log) => {
       const query = searchTerm.toLowerCase();
       const matchesSearch =
         log.truck.toLowerCase().includes(query) ||
@@ -58,23 +66,31 @@ export function useTireHistory() {
 
       return matchesSearch && matchesFilter;
     });
-  }, [searchTerm, typeFilter]);
+  }, [logs, searchTerm, typeFilter]);
 
+  // 4. Metrik agregat KPI riwayat mutasi
   const metrics: HistoryMetrics = useMemo(() => {
     return {
-      totalLogs: initialHistoryLogs.length,
-      rotationCount: initialHistoryLogs.filter(
-        (l) => l.type === "ROTASI_GANDAR",
-      ).length,
-      newInstallCount: initialHistoryLogs.filter((l) => l.type === "GANTI_BARU")
-        .length,
-      retreadCount: initialHistoryLogs.filter((l) => l.type === "VULKANISIR")
-        .length,
-      scrapCount: initialHistoryLogs.filter((l) => l.type === "AFKIR").length,
+      totalLogs: logs.length,
+      rotationCount: logs.filter((l) => {
+        return l.type === "ROTASI_GANDAR";
+      }).length,
+      newInstallCount: logs.filter((l) => {
+        return l.type === "GANTI_BARU";
+      }).length,
+      retreadCount: logs.filter((l) => {
+        return l.type === "VULKANISIR";
+      }).length,
+      scrapCount: logs.filter((l) => {
+        return l.type === "AFKIR";
+      }).length,
     };
-  }, []);
+  }, [logs]);
 
   return {
+    historyLogs: logs,
+    setHistoryLogs: setInternalLogs,
+    appendHistoryLog,
     searchTerm,
     setSearchTerm,
     typeFilter,
@@ -83,4 +99,3 @@ export function useTireHistory() {
     metrics,
   };
 }
-

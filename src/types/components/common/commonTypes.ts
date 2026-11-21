@@ -30,7 +30,7 @@ export type BadgeVariant =
   | "info"
   | "purple";
 
-export interface BadgeProps {
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children: ReactNode;
   variant?: BadgeVariant;
   icon?: LucideIcon;
@@ -50,6 +50,7 @@ export type StatCardVariant =
   | "success"
   | "danger"
   | "info"
+  | "warning"
   | "purple";
 
 export interface StatCardProps {

@@ -1,18 +1,7 @@
-import { type AuditSchedule, type ChassisType, type TireAsset } from "../types/truck/tires";
-
-export interface TruckFleetTireItem {
-  id: string;
-  unitCode: string;
-  plateNumber: string;
-  brand: string;
-  driver: string;
-  capacity: "20FT" | "40FT";
-  chassisType: ChassisType;
-  currentOdometer: number;
-  lastIotSync: string;
-  auditSchedule: AuditSchedule;
-  tires: TireAsset[];
-}
+import type {
+  TruckFleetTireItem,
+  TireAsset,
+} from "../types/TireManagement/tires";
 
 export const mockTruckTireList: TruckFleetTireItem[] = [
   // 1. TRK-001: 2 Sumbu (14 Roda) - Sasis Trailer 20FT, Status Normal
@@ -27,10 +16,10 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
     currentOdometer: 145400,
     lastIotSync: "2 menit lalu",
     auditSchedule: {
-      period: "Oktober 2026",
-      lastAuditDate: "2026-09-24",
-      nextAuditSchedule: "2026-10-25",
-      status: "PENDING",
+      period: "November 2026",
+      lastAuditDate: "2026-11-05",
+      nextAuditSchedule: "2026-12-05",
+
       surveyorName: "Eko Wahyudi",
       rescheduledTo: null,
       rescheduleReason: null,
@@ -53,7 +42,6 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         inspectorName: "Eko Wahyudi",
         photoEvidenceUrl:
           "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=600&q=80",
-        actionRecommendation: "KEEP",
       },
       {
         id: "T-102",
@@ -66,6 +54,10 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 95000,
         lastInspectionPercent: 75,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+        photoEvidenceUrl:
+          "  https://images.unsplash.com/photo-1601411101851-ea0e07766235?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D ",
       },
       // Gandar 2: Drive Tractor Head (4 Ban - PT Boxer Ukuran 1000, ring 20)
       {
@@ -79,6 +71,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 122000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-104",
@@ -91,6 +85,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 122000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-105",
@@ -103,6 +99,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 122000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-106",
@@ -115,6 +113,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 122000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       // Ban Serep (S1)
       {
@@ -128,6 +128,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 135000,
         lastInspectionPercent: 80,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       // Sasis Trailer 20FT (8 Ban: C1-C8 - PT Boxer Karet Medan)
       {
@@ -141,6 +143,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 130000,
         lastInspectionPercent: 80,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-109",
@@ -153,6 +157,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 130000,
         lastInspectionPercent: 80,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-110",
@@ -165,6 +171,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 130000,
         lastInspectionPercent: 80,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-111",
@@ -177,6 +185,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 130000,
         lastInspectionPercent: 80,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-112",
@@ -189,6 +199,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 135000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-113",
@@ -201,6 +213,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 135000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-114",
@@ -213,6 +227,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 135000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-115",
@@ -225,11 +241,13 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 135000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-24",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
     ],
   },
 
-  // 2. TRK-003: 3 Sumbu (18 Roda) - Sasis Trailer 40FT (12 Ban Trailer!), Status OVERDUE & Kritis
+  // 2. TRK-003: 2 Sumbu (14 Roda) - Sasis Trailer 20FT, Status OVERDUE & Kritis
   {
     id: "TRK-003",
     unitCode: "TRK-003",
@@ -237,14 +255,14 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
     brand: "Mitsubishi Fuso Fighter",
     driver: "Rudi Hartono",
     capacity: "40FT",
-    chassisType: "3_AXLE",
+    chassisType: "2_AXLE",
     currentOdometer: 218500,
     lastIotSync: "5 menit lalu",
     auditSchedule: {
       period: "Oktober 2026",
       lastAuditDate: "2026-09-15",
       nextAuditSchedule: "2026-10-15",
-      status: "OVERDUE",
+
       surveyorName: "Bambang Sudiro",
       rescheduledTo: null,
       rescheduleReason: null,
@@ -262,6 +280,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 156000, // 62.500 KM (Lewat 60.000 KM)
         lastInspectionPercent: 35, // < 40% Fisik -> Kritis
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-302",
@@ -274,6 +294,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 170000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       // Gandar 2: Drive Tractor Head (4 Ban)
       {
@@ -287,6 +309,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 198000,
         lastInspectionPercent: 60,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-304",
@@ -299,6 +323,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 198000,
         lastInspectionPercent: 60,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-305",
@@ -311,6 +337,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 198000,
         lastInspectionPercent: 60,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-306",
@@ -323,6 +351,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 198000,
         lastInspectionPercent: 60,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       // Ban Serep (S1)
       {
@@ -336,8 +366,10 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 200000,
         lastInspectionPercent: 75,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
-      // Sasis Trailer 40FT (12 Ban Lengkap: C1 s/d C12 - Sesuai Baris 2 & 4 Excel!)
+      // Sasis Trailer CHS-005 2 Sumbu (8 Ban: C1 s/d C8)
       {
         id: "T-308",
         serialNumber: "BX-4001",
@@ -349,6 +381,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 200000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-309",
@@ -361,6 +395,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 200000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-310",
@@ -373,6 +409,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 200000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-311",
@@ -385,6 +423,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 200000,
         lastInspectionPercent: 70,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-312",
@@ -397,6 +437,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 205000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-313",
@@ -409,6 +451,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 205000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-314",
@@ -421,6 +465,8 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 205000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
         id: "T-315",
@@ -433,56 +479,196 @@ export const mockTruckTireList: TruckFleetTireItem[] = [
         installOdometer: 205000,
         lastInspectionPercent: 65,
         lastInspectionDate: "2026-09-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
-      // Sumbu 3 (Trailer 40ft: C9 s/d C12) - C9 & C10 memicu Dual-Wheel Mating Warning
+    ],
+  },
+  {
+    id: "TRK-004",
+    unitCode: "TRK-004",
+    plateNumber: "B 9801 PQR",
+    brand: "Hino Profia ZS 4141",
+    driver: "Joko Susilo",
+    capacity: "20FT",
+    chassisType: "2_AXLE",
+    currentOdometer: 120, // Unit baru delivery dari dealer
+    lastIotSync: "Baru saja",
+    auditSchedule: {
+      period: "November 2026",
+      lastAuditDate: "-",
+      nextAuditSchedule: "2026-11-22",
+
+      surveyorName: "Budi Santoso",
+      rescheduledTo: null,
+      rescheduleReason: null,
+    },
+    tires: [], // 👈 KOSONG MELOMPONG (0 Ban) untuk mentrigger "UNIT BARU TERDETEKSI"
+  },
+  {
+    id: "TRK-005",
+    unitCode: "TRK-005",
+    plateNumber: "B 7742 TUV",
+    brand: "Isuzu Giga FVR 34 P",
+    driver: "Hendra Wijaya",
+    capacity: "20FT",
+    chassisType: "2_AXLE",
+    currentOdometer: 168400,
+    lastIotSync: "10 menit lalu",
+    auditSchedule: {
+      period: "November 2026",
+      lastAuditDate: "2026-10-15",
+      nextAuditSchedule: "2026-11-15",
+      surveyorName: "Budi Santoso",
+      rescheduledTo: "2026-11-27", // Dispensasi: ada job deadline ketat
+      rescheduleReason:
+        "Unit membawa kontainer ekspor ke Pelabuhan Belawan (closing kapal)",
+    },
+    tires: [
+      // Gandar 1: Steer (2 Ban)
       {
-        id: "T-316",
-        serialNumber: "BX-4009",
-        brand: "PT Boxer (Karet Medan)",
-        size: "Ukuran 1000, ring 20",
-        retreadStatus: "R2",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C9",
-        installOdometer: 193000, // 25.500 KM (Lewat batas)
-        lastInspectionPercent: 55,
-        lastInspectionDate: "2026-09-15",
+        id: "T-501",
+        serialNumber: "SG-50101",
+        brand: "Super Grip / MI RFD",
+        size: "10.00-20 16PR",
+        retreadStatus: "R0",
+        currentVehicleId: "TRK-005",
+        currentPosition: "H1",
+        installOdometer: 140000,
+        lastInspectionPercent: 85,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
-        id: "T-317",
-        serialNumber: "BX-4010",
-        brand: "PT Boxer (Karet Medan)",
-        size: "Ukuran 1000, ring 20",
-        retreadStatus: "R2",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C10",
-        installOdometer: 200000,
-        lastInspectionPercent: 30, // Selisih 25% (> 20%) dari C9 -> Alert Dual Wheel!
-        lastInspectionDate: "2026-09-15",
+        id: "T-502",
+        serialNumber: "SG-50102",
+        brand: "Super Grip / MI RFD",
+        size: "10.00-20 16PR",
+        retreadStatus: "R0",
+        currentVehicleId: "TRK-005",
+        currentPosition: "H2",
+        installOdometer: 140000,
+        lastInspectionPercent: 80,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
+      // Gandar 2: Drive (4 Ban)
       {
-        id: "T-318",
-        serialNumber: "BX-4011",
+        id: "T-503",
+        serialNumber: "BX-50103",
         brand: "PT Boxer (Karet Medan)",
         size: "Ukuran 1000, ring 20",
         retreadStatus: "R1",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C11",
-        installOdometer: 200000,
-        lastInspectionPercent: 70,
-        lastInspectionDate: "2026-09-15",
+        currentVehicleId: "TRK-005",
+        currentPosition: "H3",
+        installOdometer: 150000,
+        lastInspectionPercent: 75,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
       {
-        id: "T-319",
-        serialNumber: "BX-4012",
+        id: "T-504",
+        serialNumber: "BX-50104",
         brand: "PT Boxer (Karet Medan)",
         size: "Ukuran 1000, ring 20",
         retreadStatus: "R1",
-        currentVehicleId: "TRK-003",
-        currentPosition: "C12",
-        installOdometer: 200000,
-        lastInspectionPercent: 70,
-        lastInspectionDate: "2026-09-15",
+        currentVehicleId: "TRK-005",
+        currentPosition: "H4",
+        installOdometer: 150000,
+        lastInspectionPercent: 75,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
       },
+      {
+        id: "T-505",
+        serialNumber: "BX-50105",
+        brand: "PT Boxer (Karet Medan)",
+        size: "Ukuran 1000, ring 20",
+        retreadStatus: "R1",
+        currentVehicleId: "TRK-005",
+        currentPosition: "H5",
+        installOdometer: 150000,
+        lastInspectionPercent: 70,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+      },
+      {
+        id: "T-506",
+        serialNumber: "BX-50106",
+        brand: "PT Boxer (Karet Medan)",
+        size: "Ukuran 1000, ring 20",
+        retreadStatus: "R1",
+        currentVehicleId: "TRK-005",
+        currentPosition: "H6",
+        installOdometer: 150000,
+        lastInspectionPercent: 70,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+      },
+      // Sumbu 1 Trailer: (4 Ban Terpasang: C1 s/d C4)
+      {
+        id: "T-507",
+        serialNumber: "BX-50107",
+        brand: "PT Boxer (Karet Medan)",
+        size: "Ukuran 1000, ring 20",
+        retreadStatus: "R2",
+        currentVehicleId: "TRK-005",
+        currentPosition: "C1",
+        installOdometer: 155000,
+        lastInspectionPercent: 65,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+      },
+      {
+        id: "T-508",
+        serialNumber: "BX-50108",
+        brand: "PT Boxer (Karet Medan)",
+        size: "Ukuran 1000, ring 20",
+        retreadStatus: "R2",
+        currentVehicleId: "TRK-005",
+        currentPosition: "C2",
+        installOdometer: 155000,
+        lastInspectionPercent: 65,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+      },
+      {
+        id: "T-509",
+        serialNumber: "BX-50109",
+        brand: "PT Boxer (Karet Medan)",
+        size: "Ukuran 1000, ring 20",
+        retreadStatus: "R2",
+        currentVehicleId: "TRK-005",
+        currentPosition: "C3",
+        installOdometer: 155000,
+        lastInspectionPercent: 65,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+      },
+      {
+        id: "T-510",
+        serialNumber: "BX-50110",
+        brand: "PT Boxer (Karet Medan)",
+        size: "Ukuran 1000, ring 20",
+        retreadStatus: "R2",
+        currentVehicleId: "TRK-005",
+        currentPosition: "C4",
+        installOdometer: 155000,
+        lastInspectionPercent: 65,
+        lastInspectionDate: "2026-10-15",
+        treadDepthMm: 11.5,
+        pressurePsi: 115,
+      },
+      // ⚠️ CATATAN: SLOT C5, C6, C7, C8 KOSONG (BELUM TERPASANG BAN)!
     ],
   },
 ];
@@ -501,6 +687,8 @@ export const mockWarehouseTires: TireAsset[] = [
     installOdometer: 0,
     lastInspectionPercent: 100,
     lastInspectionDate: "2026-10-01",
+    treadDepthMm: 11.5,
+    pressurePsi: 115,
   },
   {
     id: "WH-002",
@@ -513,6 +701,8 @@ export const mockWarehouseTires: TireAsset[] = [
     installOdometer: 0,
     lastInspectionPercent: 100,
     lastInspectionDate: "2026-10-05",
+    treadDepthMm: 11.5,
+    pressurePsi: 115,
   },
   // Ban Vulkanisir Baru PT Boxer (Rp 1.700.000)
   {
@@ -526,6 +716,8 @@ export const mockWarehouseTires: TireAsset[] = [
     installOdometer: 0,
     lastInspectionPercent: 95,
     lastInspectionDate: "2026-10-10",
+    treadDepthMm: 11.5,
+    pressurePsi: 115,
   },
   // Hasil Jasa Retread Casing Sendiri PT Boxer (Rp 950.000)
   {
@@ -539,5 +731,7 @@ export const mockWarehouseTires: TireAsset[] = [
     installOdometer: 0,
     lastInspectionPercent: 88,
     lastInspectionDate: "2026-10-12",
+    treadDepthMm: 11.5,
+    pressurePsi: 115,
   },
 ];

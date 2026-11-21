@@ -1,11 +1,14 @@
 // src/utils/dashboard/fleetAnalysis.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
-import type { ChassisTrailerAsset } from "@/types/truck/tires";
+import type {
+  TruckFleetTireItem,
+  ChassisTrailerAsset,
+} from "@/types/TireManagement/tires";
 import type {
   FleetAnalysisItem,
   FleetFilterTab,
   FleetHealthSummaryStats,
 } from "@/types/FleetHealthDashboardView/FleetHealthDashboardViewTypes";
+import { getAuditStatus } from "../auditSchedule";
 
 /**
  * Menghitung analisis kesehatan & kelaikan jalan seluruh armada truk dan gandengan sasis.
@@ -39,7 +42,7 @@ export function calculateFleetAnalysis(
         ? Math.min(...tires.map((t) => t.lastInspectionPercent ?? 100))
         : 100;
 
-    const isAuditOverdue = truck.auditSchedule?.status === "OVERDUE";
+    const isAuditOverdue = getAuditStatus(truck.auditSchedule) === "OVERDUE";
 
     // Status Kelaikan (Fit to Dispatch vs Grounded)
     const isGrounded =
@@ -128,4 +131,3 @@ export function calculateFleetSummaryStats(
     standbyChassisCount,
   };
 }
-

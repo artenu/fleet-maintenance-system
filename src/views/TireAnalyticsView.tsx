@@ -1,21 +1,45 @@
 // src/views/TireAnalyticsView.tsx
 import { useTireAnalytics } from "@/hooks/useTireAnalytics";
+import type { TireAnalyticsViewProps } from "@/types/TireAnalyticsView/TireAnalyticsViewTypes";
 import { Container, PageHeader, Grid } from "@/components/layout";
-import { StatCard } from "@/components/common";
-import { TireAnalyticsTable } from "@/components/analyticsCPK";
-import { TrendingUp, Award, DollarSign, Gauge, Percent } from "lucide-react";
+import { StatCard, Button } from "@/components/common";
+import {
+  TireAnalyticsTable,
+  TruckCostAnalyticsTable,
+} from "@/components/analyticsCPK";
+import {
+  TrendingUp,
+  Award,
+  DollarSign,
+  Gauge,
+  Flame,
+  Truck,
+  Layers,
+} from "lucide-react";
 
-export default function TireAnalyticsView() {
+export default function TireAnalyticsView({
+  truckList,
+  warehouseTires,
+}: TireAnalyticsViewProps = {}) {
   const {
     searchTerm,
-    setSearchTerm,
     tierFilter,
-    setTierFilter,
     sortBy,
-    setSortBy,
+    truckSearchTerm,
+    truckSortBy,
+    truckRankings,
+    highestCostTruck,
+    longestServiceLifeTruck,
     analyticsList,
+    activeTab,
     metrics,
-  } = useTireAnalytics();
+    setSearchTerm,
+    setTierFilter,
+    setSortBy,
+    setTruckSearchTerm,
+    setTruckSortBy,
+    setActiveTab,
+  } = useTireAnalytics({ truckList, warehouseTires });
 
   return (
     <Container className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -28,53 +52,97 @@ export default function TireAnalyticsView() {
         badge="Analitik ROI Ban"
         badgeColor="bg-emerald-100 text-emerald-700"
       />
-
-      {/* 2. Kartu KPI Analitik Biaya */}
+      {/* 2. Kartu KPI Analitik Eksekutif */}
       <Grid cols={1} mdCols={2} lgCols={4} gap="md">
         <StatCard
           title="Rata-rata CPK Armada"
           value={`Rp ${metrics.avgCpk}`}
           subValue="Per Kilometer"
-          subtitle={`Berdasarkan data ${metrics.totalSample} sampel ban`}
+          subtitle={`Berdasarkan ${metrics.totalSample} sampel ban`}
           icon={DollarSign}
           variant="default"
         />
         <StatCard
           title="CPK Paling Efisien"
           value={`Rp ${metrics.bestValueCpk}`}
-          subValue="Best ROI"
+          subValue="Best Value Brand"
           subtitle={metrics.bestValueBrandName}
           icon={Award}
           variant="success"
         />
         <StatCard
-          title="Durabilitas Tertinggi"
-          value={`${metrics.topMileageKm.toLocaleString("id-ID")} KM`}
-          subValue="Top Mileage"
-          subtitle={metrics.topMileageBrandName}
+          title="Truk Biaya Tertinggi"
+          value={metrics.highestCostTruck?.unitCode || "-"}
+          subValue={
+            metrics.highestCostTruck
+              ? `Rp ${metrics.highestCostTruck.totalTireCost.toLocaleString("id-ID")}`
+              : "0"
+          }
+          subtitle={
+            metrics.highestCostTruck
+              ? `${metrics.highestCostTruck.plateNumber} (${metrics.highestCostTruck.totalTires} ban)`
+              : "Belum ada data"
+          }
+          icon={Flame}
+          variant="danger"
+        />
+        <StatCard
+          title="Masa Pakai Terpanjang"
+          value={metrics.longestServiceLifeTruck?.unitCode || "-"}
+          subValue={
+            metrics.longestServiceLifeTruck
+              ? `${metrics.longestServiceLifeTruck.currentOdometer.toLocaleString("id-ID")} KM`
+              : "0 KM"
+          }
+          subtitle={
+            metrics.longestServiceLifeTruck
+              ? `Driver: ${metrics.longestServiceLifeTruck.driver}`
+              : "Belum ada data"
+          }
           icon={Gauge}
           variant="info"
         />
-        <StatCard
-          title="Efisiensi Retread"
-          value="Hemat s/d 42%"
-          subValue="Optimalisasi Casing"
-          subtitle="Jasa Retread vs Beli Baru"
-          icon={Percent}
-          variant="purple"
-        />
       </Grid>
+      {/* 3. Tab Switcher: Analisis Merk vs Analisis Antar Truk */}
+      <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3">
+        <Button
+          variant={activeTab === "brand" ? "success" : "outline"}
+          size="sm"
+          icon={Layers}
+          onClick={() => setActiveTab("brand")}>
+          Performa Merk & CPK Ban
+        </Button>
 
-      {/* 3. Panel Tabel Performa Merk & CPK */}
-      <TireAnalyticsTable
-        analyticsList={analyticsList}
-        searchTerm={searchTerm}
-        onSearchTermChange={setSearchTerm}
-        tierFilter={tierFilter}
-        onTierFilterChange={setTierFilter}
-        sortBy={sortBy}
-        onSortByChange={setSortBy}
-      />
+        <Button
+          variant={activeTab === "truck" ? "success" : "outline"}
+          size="sm"
+          icon={Truck}
+          onClick={() => setActiveTab("truck")}>
+          Analitik Biaya & Jam Terbang Unit Truk
+        </Button>
+      </div>
+      {/* 4. Konten Tab Aktif */}
+      {activeTab === "brand" ? (
+        <TireAnalyticsTable
+          analyticsList={analyticsList}
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          tierFilter={tierFilter}
+          onTierFilterChange={setTierFilter}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+        />
+      ) : (
+        <TruckCostAnalyticsTable
+          truckRankings={truckRankings}
+          highestCostTruck={highestCostTruck}
+          longestServiceLifeTruck={longestServiceLifeTruck}
+          searchTerm={truckSearchTerm}
+          onSearchTermChange={setTruckSearchTerm}
+          sortBy={truckSortBy}
+          onSortByChange={setTruckSortBy}
+        />
+      )}
     </Container>
   );
 }

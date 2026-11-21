@@ -66,7 +66,7 @@ export default function FleetHealthDashboardView({
       />
 
       {/* ================= 2. KPI METRICS CARDS (GRID) ================= */}
-      <Grid cols={1} smCols={2} lgCols={5} gap="md">
+      <Grid cols={1} smCols={2} mdCols={3} gap="md" className="xl:grid-cols-5">
         {/* Total Armada */}
         <StatCard
           title="Total Armada"

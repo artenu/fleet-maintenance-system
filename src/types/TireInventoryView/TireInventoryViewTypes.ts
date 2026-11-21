@@ -1,6 +1,8 @@
 // src/types/TireInventoryView/TireInventoryViewTypes.ts
-import type { TruckFleetTireItem } from "@/data/mockTires";
-import type { TireAsset } from "@/types/truck/tires";
+import type {
+  TruckFleetTireItem,
+  TireAsset,
+} from "@/types/TireManagement/tires";
 
 /**
  * Prop interface untuk komponen TireInventoryView
@@ -64,4 +66,3 @@ export interface ReceiveTireModalProps {
   onClose: () => void;
   onConfirmReceive: (newTire: TireAsset) => void;
 }
-

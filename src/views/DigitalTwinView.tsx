@@ -1,40 +1,47 @@
+import { useState, useMemo } from "react";
+
 // src/views/DigitalTwinView.tsx
-import { WheelLayoutVisualizer } from "@/components/digitalTwin";
-import { formatThousand } from "@/utils/formatters";
+import { AlertTriangle, Sparkles, Info } from "lucide-react";
 import { useDigitalTwin } from "@/hooks/useDigitalTwin";
 import type { DigitalTwinViewProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 // 🧱 Komponen Reusable Design System
-import { Container, Grid } from "@/components/layout";
-import { Button, Badge, Card, StatCard, Modal } from "@/components/common";
-import { FormInput, TextArea } from "@/components/forms";
-
+import { Container } from "@/components/layout";
+import { Button, Modal, Badge } from "@/components/common";
 import {
-  RotateCw,
-  ShieldAlert,
-  Truck,
-  ClipboardCheck,
-  Disc3,
-  ShieldCheck,
-  Wrench,
-  AlertTriangle,
-  AlertOctagon,
-  CheckCircle2,
-  Camera,
-  ZoomIn,
-  Link2,
-  CalendarClock,
-} from "lucide-react";
+  WheelLayoutVisualizer,
+  FleetReadinessBanner,
+  DigitalTwinMetrics,
+  SelectedWheelDetailCard,
+  MechanicOverrideModal,
+  InstallTireModal,
+} from "@/components/digitalTwin";
 
 export default function DigitalTwinView({
   activeTruck,
+  chassisList = [],
+  warehouseTires = [],
+  truckList = [],
+  onSelectTruck,
   selectedSlot,
   onSelectSlot,
   onOpenInspection,
   onOpenRotation,
   onEmergencySwapSpare,
   onApplyMechanicOverride,
+  onInstallTire,
+  onMoveTireBetweenSlots,
+  onTransferTireFromOtherTruck,
 }: DigitalTwinViewProps) {
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
+
+  // Cari sasis aktif dari hasil perangkaian (Drop & Hook)
+  const activeChassis = chassisList.find(
+    (c) => c.attachedHeadId === activeTruck.id,
+  );
+  const isBobTail = !activeChassis;
+  const currentChassisType = activeChassis?.type || activeTruck.chassisType;
+
   const {
     previewImage,
     setPreviewImage,
@@ -49,453 +56,255 @@ export default function DigitalTwinView({
     handleQuickSwapSpare,
     handleConfirmOverride,
     criticalTires,
+    hasNoTires,
     isGrounded,
     readinessPercent,
+    expectedTiresCount,
+    installedTiresCount,
+    missingTiresCount,
+    isTiresIncomplete,
   } = useDigitalTwin({
     activeTruck,
     selectedSlot,
+    isBobTail,
+    chassisType: currentChassisType,
     onEmergencySwapSpare,
     onApplyMechanicOverride,
   });
 
+  // 🔍 Pemindaian Otomatis Database: Cari truk baru (0 ban) atau yang bannya belum lengkap
+  const pendingTireTrucks = useMemo(() => {
+    return truckList
+      .map((truck) => {
+        const attachedChassis = chassisList.find(
+          (c) => c.attachedHeadId === truck.id,
+        );
+        const isTruckBobtail = !attachedChassis;
+        const configType = attachedChassis?.type || truck.chassisType;
+        const expectedCount = isTruckBobtail
+          ? 6
+          : configType === "2_AXLE"
+            ? 14
+            : 18;
+        const installedCount = truck.tires.filter(
+          (t) => t.currentPosition !== "S1",
+        ).length;
+        const hasNoTires = truck.tires.length === 0;
+        const isIncomplete = !hasNoTires && installedCount < expectedCount;
+
+        if (hasNoTires || isIncomplete) {
+          return {
+            truck,
+            hasNoTires,
+            isIncomplete,
+            installedCount,
+            expectedCount,
+            missingCount: Math.max(0, expectedCount - installedCount),
+          };
+        }
+        return null;
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  }, [truckList, chassisList]);
+
   return (
     <Container className="space-y-6 pb-12 animate-in fade-in duration-200">
-      {/* ================= 1. BANNER KELAIKAN JALAN ARMADA ================= */}
-      <div
-        className={`rounded-2xl p-4 border flex flex-wrap items-center justify-between gap-4 transition-all shadow-xs ${
-          isGrounded
-            ? "border-rose-300 bg-linear-to-r from-rose-50 to-red-50/70 text-rose-950"
-            : "border-emerald-300 bg-linear-to-r from-emerald-50 to-teal-50/70 text-emerald-950"
-        }`}>
-        <div className="flex items-center gap-3.5">
-          <div
-            className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white shadow-md ${
-              isGrounded
-                ? "bg-rose-600 shadow-rose-500/30 animate-pulse"
-                : "bg-emerald-600 shadow-emerald-500/30"
-            }`}>
-            {isGrounded ? (
-              <AlertOctagon size={24} />
-            ) : (
-              <CheckCircle2 size={24} />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge variant={isGrounded ? "danger" : "success"}>
-                {isGrounded
-                  ? "DITAHAN DI POOL (GROUNDED)"
-                  : "SIAP JALAN (FIT TO DISPATCH)"}
-              </Badge>
-              <strong className="text-sm font-black tracking-tight text-slate-900">
-                Unit {activeTruck.unitCode} ({activeTruck.plateNumber})
-              </strong>
+      {/* 🚨 1. BANNER AUTO-DETECT GLOBAL: Muncul jika di database ada unit baru / ban belum lengkap */}
+      {pendingTireTrucks.length > 0 && (
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/90 p-4 shadow-sm space-y-3 animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200/80 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500 text-white shadow-xs">
+                <AlertTriangle size={18} />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-amber-950 flex items-center gap-2">
+                  <span>Perhatian Armada di Database:</span>
+                  <Badge variant="warning" className="text-[10px]">
+                    {pendingTireTrucks.length} Unit Perlu Tindakan
+                  </Badge>
+                </h4>
+                <p className="text-[11px] text-amber-800">
+                  Terdeteksi truk baru yang belum memiliki ban atau unit dengan
+                  ban yang belum lengkap terpasang di gandar.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-600 mt-1">
-              {isGrounded ? (
-                <span>
-                  <strong className="text-rose-700">PERINGATAN:</strong>{" "}
-                  Ditemukan{" "}
-                  <strong>{criticalTires.length} roda berstatus KRITIS</strong>.
-                  Unit dilarang memuat kontainer sebelum ban diperbaiki atau
-                  dirotasi!
-                </span>
-              ) : (
-                <span>
-                  Seluruh roda dalam batas operasional aman. Surat Jalan (SJ)
-                  siap diterbitkan untuk rute jarak jauh.
-                </span>
-              )}
-            </p>
+            <span className="text-[10px] font-bold text-amber-800 bg-amber-100/90 px-3 py-1.5 rounded-xl border border-amber-200">
+              📦 Stok Gudang Pool: {warehouseTires.length} Ban Siap Pasang
+            </span>
+          </div>
+          {/* Tombol Cepat (Quick Pills) untuk Langsung Membuka Unit Truk Tersebut */}
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <span className="text-[11px] font-bold text-amber-900 mr-1">
+              Klik untuk langsung periksa unit:
+            </span>
+            {pendingTireTrucks.map((item) => {
+              const isCurrentActive = item.truck.id === activeTruck.id;
+              return (
+                <button
+                  key={item.truck.id}
+                  type="button"
+                  onClick={() => onSelectTruck?.(item.truck.id)}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs ${
+                    isCurrentActive
+                      ? "bg-amber-600 text-white ring-2 ring-amber-500/40"
+                      : "bg-white border border-amber-300 text-amber-900 hover:bg-amber-100"
+                  }`}>
+                  <span>
+                    {item.truck.unitCode} ({item.truck.plateNumber})
+                  </span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase ${
+                      item.hasNoTires
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-800"
+                    }`}>
+                    {item.hasNoTires
+                      ? "0 Roda (Unit Baru)"
+                      : `${item.installedCount}/${item.expectedCount} Roda`}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
+      )}
+      {/* 1. Banner Kelaikan Jalan Armada (Fit to Dispatch vs Grounded) */}
+      <FleetReadinessBanner
+        unitCode={activeTruck.unitCode}
+        plateNumber={activeTruck.plateNumber}
+        isGrounded={isGrounded}
+        hasNoTires={hasNoTires}
+        criticalTiresCount={criticalTires.length}
+        missingTiresCount={missingTiresCount}
+        readinessPercent={readinessPercent}
+        isBobTail={isBobTail}
+        attachedChassisCode={activeChassis?.chassisCode}
+        chassisType={currentChassisType}
+        chassisLengthCategory={
+          activeChassis?.lengthCategory || activeTruck.capacity
+        }
+      />
 
-        <div className="rounded-xl bg-white px-3.5 py-1.5 border border-slate-200 text-center shadow-2xs">
-          <span className="text-[10px] text-slate-400 font-bold block uppercase">
-            Kesiapan Roda
-          </span>
-          <strong
-            className={`text-base font-black ${
-              isGrounded ? "text-rose-600" : "text-emerald-600"
-            }`}>
-            {readinessPercent}% Layak
-          </strong>
+      {/* 2. Banner Notifikasi Auto-Detect: Unit Baru / Ban Belum Lengkap Terpasang */}
+      {hasNoTires && (
+        <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/80 p-4.5 flex flex-wrap items-center justify-between gap-4 shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-3.5">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Badge variant="warning" className="font-black text-xs">
+                  UNIT BARU TERDETEKSI
+                </Badge>
+                <span className="font-extrabold text-sm text-amber-950">
+                  Truk Belum Memiliki Ban Terpasang (0 Roda)
+                </span>
+              </div>
+              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                Unit <strong>{activeTruck.unitCode}</strong> (
+                {activeTruck.plateNumber}) baru didaftarkan ke armada dan belum
+                memiliki ban pada gandarnya. Silakan pasang ban dari stok gudang
+                pool dengan mengklik kotak roda pada denah di bawah.
+              </p>
+            </div>
+          </div>
+          <Badge
+            variant="neutral"
+            className="bg-amber-100 text-amber-800 font-bold px-3 py-1.5 border border-amber-200">
+            📦 Stok Gudang: {warehouseTires.length} Ban Siap Pasang
+          </Badge>
         </div>
-      </div>
+      )}
 
-      {/* ================= 2. KPI METRICS CARDS (GRID) ================= */}
-      <Grid cols={1} smCols={2} lgCols={4} gap="md">
-        <StatCard
-          title="Unit Truk & Driver"
-          value={activeTruck.unitCode}
-          subValue={activeTruck.plateNumber}
-          subtitle={`Driver: ${activeTruck.driver}`}
-          icon={Truck}
-          variant="default"
-        />
+      {isTiresIncomplete && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/80 p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-3.5">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+              <Info size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Badge variant="info" className="font-black text-xs">
+                  INSTALASI BELUM LENGKAP
+                </Badge>
+                <span className="font-extrabold text-xs text-blue-950">
+                  Terdapat {missingTiresCount} Slot Roda Kosong Belum Terpasang
+                </span>
+              </div>
+              <p className="text-xs text-blue-800 mt-0.5">
+                Konfigurasi{" "}
+                {isBobTail
+                  ? "Bobtail (6 Ban)"
+                  : currentChassisType === "2_AXLE"
+                    ? "14 Ban"
+                    : "18 Ban"}{" "}
+                memerlukan {expectedTiresCount} roda aktif, saat ini baru
+                terpasang {installedTiresCount} roda. Klik slot roda yang kosong
+                pada denah untuk memasang ban dari gudang pool.
+              </p>
+            </div>
+          </div>
+          <Badge
+            variant="info"
+            className="bg-white text-blue-800 font-bold border border-blue-200">
+            {installedTiresCount} / {expectedTiresCount} Roda Terpasang
+          </Badge>
+        </div>
+      )}
 
-        <StatCard
-          title="Odometer IoT Terkini"
-          value={`${formatThousand(activeTruck.currentOdometer)} KM`}
-          subtitle={`Sync: ${activeTruck.lastIotSync}`}
-          icon={CheckCircle2}
-          variant="success"
-        />
+      {/* 2. Kartu Ringkasan KPI & Metrik Armada */}
+      <DigitalTwinMetrics activeTruck={activeTruck} />
 
-        <StatCard
-          title="Siklus Audit Bulanan"
-          value={activeTruck.auditSchedule.nextAuditSchedule}
-          subtitle={
-            <Badge
-              variant={
-                activeTruck.auditSchedule.status === "OVERDUE"
-                  ? "danger"
-                  : activeTruck.auditSchedule.status === "COMPLETED"
-                    ? "success"
-                    : "warning"
-              }
-              pulse={activeTruck.auditSchedule.status === "OVERDUE"}>
-              {activeTruck.auditSchedule.status}
-            </Badge>
-          }
-          icon={CalendarClock}
-          variant={
-            activeTruck.auditSchedule.status === "OVERDUE"
-              ? "danger"
-              : "default"
-          }
-        />
-
-        <StatCard
-          title="Konfigurasi Sasis"
-          value={activeTruck.chassisType === "2_AXLE" ? "14 Roda" : "18 Roda"}
-          subValue={activeTruck.capacity}
-          subtitle={
-            activeTruck.chassisType === "2_AXLE"
-              ? "2 Gandar Sasis"
-              : "3 Gandar Sasis"
-          }
-          icon={Link2}
-          variant="info"
-        />
-      </Grid>
-
-      {/* ================= 3. DENAH RODA & DETAIL INSPECTOR ================= */}
+      {/* 3. Denah Tata Letak Roda & Detail Inspector Terpilih */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Kolom Kiri: Visualizer Denah Roda */}
+        {/* Kolom Kiri: Visualizer Denah Roda Interaktif */}
         <div className="lg:col-span-2">
           <WheelLayoutVisualizer
+            key={`${activeTruck.id}-${activeChassis?.id || "bobtail"}-${activeChassis?.type || activeTruck.chassisType}`}
             unitCode={activeTruck.unitCode}
             plateNumber={activeTruck.plateNumber}
+            brand={activeTruck.brand}
+            driver={activeTruck.driver}
             currentOdometer={activeTruck.currentOdometer}
-            initialChassisType={activeTruck.chassisType}
+            initialChassisType={activeChassis?.type || activeTruck.chassisType}
+            attachedChassisCode={activeChassis?.chassisCode}
+            chassisLengthCategory={
+              activeChassis?.lengthCategory || activeTruck.capacity
+            }
             tires={activeTruck.tires}
+            isBobTail={isBobTail}
             onSelectSlot={(slot) => onSelectSlot(slot)}
           />
         </div>
 
         {/* Kolom Kanan: Panel Detail Roda Terpilih */}
-        <Card className="lg:sticky lg:top-20 space-y-4 max-h-[calc(100vh-6.5rem)] overflow-y-auto">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="font-extrabold text-sm text-slate-900">
-              Detail Pemeriksaan Roda
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Klik salah satu kotak ban pada denah untuk melihat riwayatnya.
-            </p>
-          </div>
-
-          {selectedSlot ? (
-            <div className="space-y-4 text-xs">
-              {/* Posisi & Health Status */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-2xl font-black text-slate-900">
-                    Posisi {selectedSlot.position}
-                  </span>
-                  <p className="text-[11px] font-semibold text-slate-500 capitalize">
-                    {selectedSlot.axleType} Axle
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    selectedSlot.healthStatus === "CRITICAL"
-                      ? "danger"
-                      : selectedSlot.healthStatus === "WARNING"
-                        ? "warning"
-                        : "success"
-                  }>
-                  {selectedSlot.healthStatus}
-                </Badge>
-              </div>
-
-              {/* Badge Toleransi Mekanik Jika Aktif */}
-              {selectedSlot.tire?.isMechanicOverridden && (
-                <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-amber-900">
-                  <ShieldCheck
-                    size={16}
-                    className="text-amber-600 shrink-0 mt-0.5"
-                  />
-                  <div>
-                    <strong className="font-bold block">
-                      Toleransi Mekanik +5.000 KM Aktif
-                    </strong>
-                    <p className="text-[10px] text-amber-800 mt-0.5">
-                      Disetujui oleh:{" "}
-                      <strong>{selectedSlot.tire.overrideApprovedBy}</strong>.
-                      Alasan: {selectedSlot.tire.overrideReason}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Alarm Pelanggaran Golden Rule */}
-              {selectedSlot.ruleViolations.length > 0 && (
-                <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-rose-900 space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <ShieldAlert size={16} className="text-rose-600" />
-                    <span>Pelanggaran Aturan Mutlak!</span>
-                  </div>
-                  {selectedSlot.ruleViolations.map((v, i) => (
-                    <p key={i} className="text-[11px] leading-relaxed">
-                      • {v}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {/* Data Fisik Ban */}
-              {selectedSlot.tire ? (
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Nomor Seri:</span>
-                    <strong className="text-slate-900 font-bold">
-                      {selectedSlot.tire.serialNumber}
-                    </strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Merk & Ukuran:</span>
-                    <span className="font-semibold text-slate-800">
-                      {selectedSlot.tire.brand} ({selectedSlot.tire.size})
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Siklus Casing:</span>
-                    <span className="font-bold text-blue-700">
-                      {selectedSlot.tire.retreadStatus === "R0"
-                        ? "R0 (Ban Baru Asli)"
-                        : selectedSlot.tire.retreadStatus === "R1"
-                          ? "R1 (Vulkanisir ke-1 - Boleh Steer)"
-                          : selectedSlot.tire.retreadStatus === "R2"
-                            ? "R2 (Vulkanisir ke-2)"
-                            : "R3 (Vulkanisir ke-3 - Batas Maks)"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">
-                      Jarak Tempuh di Gandar:
-                    </span>
-                    <strong className="text-slate-900 font-bold">
-                      {formatThousand(selectedSlot.kmElapsed)} KM
-                    </strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Sisa Jarak Tempuh:</span>
-                    <strong
-                      className={`font-bold ${
-                        selectedSlot.remainingKm <= 0
-                          ? "text-rose-600"
-                          : "text-slate-900"
-                      }`}>
-                      {formatThousand(selectedSlot.remainingKm)} KM
-                    </strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Fisik Tapak:</span>
-                    <strong className="text-slate-900 font-bold">
-                      {selectedSlot.tire.lastInspectionPercent}%
-                      {selectedSlot.tire.treadDepthMm && (
-                        <span className="text-slate-400 font-normal ml-1">
-                          ({selectedSlot.tire.treadDepthMm} mm)
-                        </span>
-                      )}
-                    </strong>
-                  </div>
-
-                  {selectedSlot.tire.pressurePsi && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Tekanan Angin:</span>
-                      <strong className="text-slate-900 font-bold">
-                        {selectedSlot.tire.pressurePsi} PSI
-                      </strong>
-                    </div>
-                  )}
-
-                  {/* Foto Bukti Fisik Lapangan */}
-                  {selectedSlot.tire.photoEvidenceUrl ? (
-                    <div className="pt-2 border-t border-slate-200/60">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                          <Camera size={13} className="text-slate-600" />
-                          Foto Bukti Lapangan:
-                        </span>
-                        <Badge variant="success">Terverifikasi</Badge>
-                      </div>
-
-                      <div
-                        onClick={() => {
-                          const tire = selectedSlot.tire;
-                          if (!tire?.photoEvidenceUrl) {
-                            return;
-                          }
-                          setPreviewImage({
-                            url: tire.photoEvidenceUrl,
-                            title: `Ban ${tire.serialNumber} (${tire.brand})`,
-                            subtitle: `Posisi ${selectedSlot.position} • Diinspeksi ${tire.lastInspectionDate} oleh ${tire.inspectorName || "Surveyor Lapangan"}`,
-                          });
-                        }}
-                        className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-2xs bg-slate-900 cursor-pointer">
-                        <img
-                          src={selectedSlot.tire.photoEvidenceUrl}
-                          alt="Foto Bukti Tapak Ban"
-                          className="w-full h-32 object-cover group-hover:scale-105 transition duration-200"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5 text-white text-xs font-bold">
-                          <ZoomIn size={16} />
-                          <span>Klik untuk Memperbesar</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-dashed border-slate-200">
-                      <span className="text-[11px]">
-                        Belum ada foto bukti fisik
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onOpenInspection}>
-                        + Ambil Foto
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-slate-400 italic">
-                  Slot roda ini saat ini belum terpasang ban.
-                </p>
-              )}
-
-              {/* Baris 1: Tombol Aksi Lapangan Reguler */}
-              <div className="pt-2 grid grid-cols-2 gap-2 border-t border-slate-100">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  icon={RotateCw}
-                  onClick={onOpenRotation}>
-                  Rotasi Ban
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon={ClipboardCheck}
-                  onClick={onOpenInspection}>
-                  Audit Fisik
-                </Button>
-              </div>
-
-              {/* Baris 2: Tombol Emergency Roadside Swap & Toleransi Mekanik */}
-              {selectedSlot.tire && (
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedSlot.position !== "S1" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      icon={Disc3}
-                      onClick={handleQuickSwapSpare}
-                      title="Tukar cepat dengan Ban Serep S1 saat kondisi darurat"
-                      className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100">
-                      Swap Serep (S1)
-                    </Button>
-                  )}
-
-                  {!selectedSlot.tire.isMechanicOverridden ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      icon={Wrench}
-                      onClick={() => setIsOverrideModalOpen(true)}
-                      title="Berikan toleransi +5.000 KM jika kondisi fisik tapak masih tebal"
-                      className={`border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 ${
-                        selectedSlot.position === "S1" ? "col-span-2" : ""
-                      }`}>
-                      +5.000 KM
-                    </Button>
-                  ) : (
-                    <Badge
-                      variant="warning"
-                      className="flex items-center justify-center">
-                      Toleransi Aktif
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-slate-400 space-y-2">
-              <Truck size={32} className="mx-auto text-slate-300" />
-              <p className="text-xs font-medium">
-                Pilih salah satu kotak ban untuk melihat data
-              </p>
-            </div>
-          )}
-        </Card>
+        <SelectedWheelDetailCard
+          selectedSlot={selectedSlot}
+          hasNoTires={hasNoTires}
+          onOpenInspection={onOpenInspection}
+          onOpenRotation={onOpenRotation}
+          onQuickSwapSpare={handleQuickSwapSpare}
+          onOpenOverrideModal={() => setIsOverrideModalOpen(true)}
+          onPreviewPhoto={setPreviewImage}
+          onOpenInstallTire={() => setIsInstallModalOpen(true)}
+        />
       </div>
 
-      {/* ================= MODAL TOLERANSI MEKANIK (+5.000 KM) ================= */}
-      <Modal
+      {/* 4. Modal Toleransi Mekanik (+5.000 KM) */}
+      <MechanicOverrideModal
         isOpen={isOverrideModalOpen}
         onClose={() => setIsOverrideModalOpen(false)}
-        title="Dispensasi Toleransi Mekanik (+5.000 KM)"
-        description="SOP: Hanya boleh diberikan jika fisik tapak masih tebal (>50%) & keausan merata"
-        size="md">
-        <form onSubmit={handleConfirmOverride} className="space-y-4 text-xs">
-          <FormInput
-            label="Nama Kepala Mekanik PIC"
-            placeholder="Contoh: Budi Santoso (Mekanik Senior)"
-            value={mechanicName}
-            onChange={(e) => setMechanicName(e.target.value)}
-            required
-          />
+        mechanicName={mechanicName}
+        onChangeMechanicName={setMechanicName}
+        overrideReason={overrideReason}
+        onChangeOverrideReason={setOverrideReason}
+        onSubmit={handleConfirmOverride}
+      />
 
-          <TextArea
-            label="Alasan Teknis Pemberian Toleransi"
-            placeholder="Jelaskan kondisi fisik tapak ban, alasan toleransi, dan tindakan pencegahan..."
-            rows={3}
-            value={overrideReason}
-            onChange={(e) => setOverrideReason(e.target.value)}
-            required
-          />
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsOverrideModalOpen(false)}>
-              Batal
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              type="submit"
-              className="bg-amber-600 hover:bg-amber-700">
-              Setujui Toleransi +5.000 KM
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* ================= MODAL PERINGATAN PELANGGARAN BAN SEREP ================= */}
+      {/* 5. Modal Peringatan Pelanggaran Ban Serep */}
       <Modal
         isOpen={Boolean(spareViolationMsg)}
         onClose={() => setSpareViolationMsg(null)}
@@ -519,7 +328,7 @@ export default function DigitalTwinView({
         </p>
       </Modal>
 
-      {/* ================= MODAL PREVIEW FOTO UKURAN PENUH ================= */}
+      {/* 6. Modal Preview Foto Ukuran Penuh */}
       <Modal
         isOpen={Boolean(previewImage)}
         onClose={() => setPreviewImage(null)}
@@ -536,6 +345,44 @@ export default function DigitalTwinView({
           </div>
         )}
       </Modal>
+      {/* 7. Modal Pasang / Daftarkan Ban di Slot Kosong */}
+      <InstallTireModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        slot={selectedSlot}
+        truckUnitCode={activeTruck.unitCode}
+        activeTruckId={activeTruck.id}
+        currentOdometer={activeTruck.currentOdometer}
+        warehouseTires={warehouseTires}
+        currentTruckTires={activeTruck.tires}
+        truckList={truckList}
+        onConfirmInstall={(position, tire) => {
+          if (onInstallTire) {
+            onInstallTire(position, tire);
+          }
+          setIsInstallModalOpen(false);
+        }}
+        onMoveTireFromSlot={(fromPos, toPos) => {
+          if (onMoveTireBetweenSlots) {
+            onMoveTireBetweenSlots(fromPos, toPos);
+          }
+          setIsInstallModalOpen(false);
+        }}
+        onTransferTireFromOtherTruck={(
+          sourceTruckId,
+          sourceTireId,
+          targetPos,
+        ) => {
+          if (onTransferTireFromOtherTruck) {
+            onTransferTireFromOtherTruck(
+              sourceTruckId,
+              sourceTireId,
+              targetPos,
+            );
+          }
+          setIsInstallModalOpen(false);
+        }}
+      />
     </Container>
   );
 }
