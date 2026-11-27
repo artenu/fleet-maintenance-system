@@ -9,6 +9,8 @@ import type {
 import type { SearchableOption } from "@/types/components/forms/formsTypes";
 import { mockCurrentSurveyor } from "@/types/auth/auth";
 import { getWheelPositionDescription } from "@/constants/truck";
+import { TIRE_THRESHOLDS } from "@/constants/truck/tireRules";
+import { addYearsToDateString } from "@/utils/tireManagement/tireCalculations";
 import {
   DEFAULT_FALLBACK_CHASSIS_CODE,
   DEFAULT_FALLBACK_ODOMETER,
@@ -274,6 +276,14 @@ export function useTireConditionForm({
         currentVehicleId: unitCode,
         currentPosition: pos,
         installOdometer: odometer,
+        installDate: inspectionDate,
+        expiryDate:
+          data.retreadStatus === "R0"
+            ? addYearsToDateString(
+                inspectionDate,
+                TIRE_THRESHOLDS.NEW_TIRE_USAGE_EXPIRY_YEARS,
+              )
+            : undefined,
         lastInspectionPercent: data.physicalPercent,
         lastInspectionDate: inspectionDate,
         treadDepthMm: data.treadDepthMm,

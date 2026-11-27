@@ -48,6 +48,10 @@ export type ChassisType = "2_AXLE" | "3_AXLE";
  */
 export type RetreadStatus = "R0" | "R1" | "R2" | "R3" | "AFKIR";
 
+export type RetreadCycleKey = "R0" | "R1" | "R2" | "R3";
+
+export type TirePunctureByCycle = Partial<Record<RetreadCycleKey, number>>;
+
 /**
  * Status Kesehatan Ban (Decision Matrix Result):
  * - GOOD: KM < 80% & Fisik > 70%
@@ -104,7 +108,8 @@ export interface WheelSlotEvaluation {
   remainingKm: number;
   wearPercentage: number;
   healthStatus: TireHealthStatus;
-  ruleViolations: string[]; // Contoh: "PELANGGARAN: Posisi Steer H1 tidak boleh ban vulkanisir (R1)!"
+  ruleViolations: string[]; // Contoh: "PELANGGARAN: Posisi Steer H1 tidak boleh ban vulkanisir (R2)!"
+  ruleWarnings?: string[]; // Peringatan non-blokir (misal R1 di gandar Steer, mendekati expired)
 }
 
 export type ActionRecommendation =
@@ -132,12 +137,19 @@ export interface TireAsset {
   overrideApprovedBy?: string;
 
   // Parameter Tambahan Inspeksi Real-Time Lapangan
+  installDate?: string | null; // Tanggal pasang / ganti ban pada unit
+  warehouseEntryDate?: string | null; // Tanggal masuk gudang (acuan exp 5 tahun)
+  expiryDate?: string | null; // Tanggal kedaluwarsa ban (1 thn pakai baru / 5 thn gudang)
+  overridePhotoUrl?: string; // Bukti foto fisik saat pemberian toleransi mekanik
   treadDepthMm?: number; // Kedalaman alur tapak (mm)
   pressurePsi?: number; // Tekanan angin aktual (PSI)
   visualDamages?: string[]; // Checklist cacat fisik (benjol, sobek, dll)
   inspectorName?: string; // Nama surveyor yang mengaudit
   inspectionNotes?: string; // Catatan temuan / rekomendasi
-  photoEvidenceUrl?: string; // URL / Preview foto bukti fisik
+  photoEvidenceUrl?: string; // URL / Preview foto bukti fisik utama
+  photoEvidenceUrls?: string[]; // Daftar beberapa foto bukti fisik inspeksi ban
+  punctureCount?: number; // Total jumlah bocor / tambalan selama masa penggunaan
+  punctureByCycle?: TirePunctureByCycle; // Rincian jumlah bocor/tambal pada R0, R1, R2, R3
   actionRecommendation?: ActionRecommendation; // Rekomendasi tindakan lapangan
 }
 

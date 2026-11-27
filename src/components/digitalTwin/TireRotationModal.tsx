@@ -1,5 +1,5 @@
 // src/components/digitalTwin/TireRotationModal.tsx
-import { ArrowRightLeft, ShieldAlert } from "lucide-react";
+import { ArrowRightLeft, ShieldAlert, AlertTriangle } from "lucide-react";
 import type {
   WheelSlotEvaluation,
   TireAsset,
@@ -50,6 +50,7 @@ function TireRotationFormContent({
     mechanicPic,
     setMechanicPic,
     violationError,
+    steerWarning,
     handleSubmit,
   } = useTireRotationForm({
     sourceSlot,
@@ -90,6 +91,19 @@ function TireRotationFormContent({
             <p className="text-[11px] mt-0.5 leading-relaxed">
               {violationError}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* 3b. Peringatan Khusus Ban Vulkanisir 1x (R1) di Steer Depan */}
+      {steerWarning && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 text-xs">
+          <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <strong className="font-bold">
+              Peringatan Validasi Gandar Steer (R1)
+            </strong>
+            <p className="text-[11px] mt-0.5 leading-relaxed">{steerWarning}</p>
           </div>
         </div>
       )}

@@ -33,8 +33,8 @@ function TireInspectionFormContent({
 }: TireInspectionFormContentProps) {
   const tire = slot.tire;
   const {
-    isFullPreviewOpen,
-    setIsFullPreviewOpen,
+    previewPhotoIndex,
+    setPreviewPhotoIndex,
     serialNumber,
     setSerialNumber,
     brand,
@@ -43,6 +43,8 @@ function TireInspectionFormContent({
     setCustomBrand,
     retreadStatus,
     setRetreadStatus,
+    inspectionDate,
+    setInspectionDate,
     odometer,
     setOdometer,
     pressurePsi,
@@ -53,15 +55,20 @@ function TireInspectionFormContent({
     setPhysicalPercent,
     visualDamages,
     toggleDamage,
+    punctureByCycle,
+    handleChangePunctureForCycle,
+    totalPunctures,
+    isAfkirMandatory,
     actionRecommendation,
     setActionRecommendation,
     notes,
     setNotes,
-    photoPreview,
-    setPhotoPreview,
+    photoPreviews,
     handlePhotoCapture,
+    handleDeletePhoto,
     isPhysicalCritical,
     isSteerViolation,
+    isSteerRetreadWarning,
     liveStatus,
     buildUpdatedTire,
     isSteer,
@@ -86,7 +93,10 @@ function TireInspectionFormContent({
         kmElapsed={slot.kmElapsed}
         pressurePsi={pressurePsi}
         isSteerViolation={isSteerViolation}
+        isSteerRetreadWarning={isSteerRetreadWarning}
         isPhysicalCritical={isPhysicalCritical}
+        isAfkirMandatory={isAfkirMandatory}
+        totalPunctures={totalPunctures}
         position={slot.position}
         retreadStatus={retreadStatus}
       />
@@ -101,7 +111,11 @@ function TireInspectionFormContent({
         onChangeCustomBrand={setCustomBrand}
         retreadStatus={retreadStatus}
         onChangeRetreadStatus={setRetreadStatus}
+        inspectionDate={inspectionDate}
+        onChangeInspectionDate={setInspectionDate}
         isSteer={isSteer}
+        isAfkirMandatory={isAfkirMandatory}
+        totalPunctures={totalPunctures}
       />
 
       {/* 3. Pengukuran Teknis (KM, PSI, Tapak mm, Slider %) */}
@@ -116,20 +130,24 @@ function TireInspectionFormContent({
         onChangePhysicalPercent={setPhysicalPercent}
       />
 
-      {/* 4. Checklist Kerusakan Fisik */}
+      {/* 4. Checklist Kerusakan Fisik & Riwayat Tambal/Bocor */}
       <InspectionDamageSection
         visualDamages={visualDamages}
         onToggleDamage={toggleDamage}
+        punctureByCycle={punctureByCycle}
+        currentRetreadStatus={retreadStatus}
+        onChangePunctureForCycle={handleChangePunctureForCycle}
+        totalPunctures={totalPunctures}
       />
 
-      {/* 5. Foto Bukti Lapangan & Lightbox Preview */}
+      {/* 5. Foto Bukti Lapangan (Multi-Foto) & Lightbox Preview */}
       <InspectionPhotoSection
-        photoPreview={photoPreview}
+        photoPreviews={photoPreviews}
         onPhotoCapture={handlePhotoCapture}
-        onDeletePhoto={() => setPhotoPreview(null)}
-        onOpenFullPreview={() => setIsFullPreviewOpen(true)}
-        isFullPreviewOpen={isFullPreviewOpen}
-        onCloseFullPreview={() => setIsFullPreviewOpen(false)}
+        onDeletePhoto={handleDeletePhoto}
+        previewPhotoIndex={previewPhotoIndex}
+        onOpenFullPreview={(idx) => setPreviewPhotoIndex(idx)}
+        onCloseFullPreview={() => setPreviewPhotoIndex(null)}
         serialNumber={serialNumber}
       />
 

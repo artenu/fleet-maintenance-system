@@ -33,6 +33,8 @@ export function useDigitalTwin({
   const [overrideReason, setOverrideReason] = useState<string>(
     "Fisik kembangan masih tebal (>60%) & merata, rute operasional jalan tol datar",
   );
+  const [overridePhotoUrl, setOverridePhotoUrl] = useState<string | null>(null);
+  const [overrideError, setOverrideError] = useState<string | null>(null);
 
   // Modal Peringatan Pelanggaran Swap Serep
   const [spareViolationMsg, setSpareViolationMsg] = useState<string | null>(
@@ -44,7 +46,33 @@ export function useDigitalTwin({
     return activeTruck.tires.find((t) => t.currentPosition === "S1");
   }, [activeTruck.tires]);
 
-  // Handler Aksi Tukar Ban Serep (Golden Rule #1: Steer izinkan R0 & R1!)
+  const handleOverridePhotoCapture = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setOverridePhotoUrl(reader.result as string);
+      setOverrideError(null);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleDeleteOverridePhoto = () => {
+    setOverridePhotoUrl(null);
+  };
+
+  const handleOpenOverrideModal = () => {
+    setOverridePhotoUrl(null);
+    setOverrideError(null);
+    setIsOverrideModalOpen(true);
+  };
+
+  // Handler Aksi Tukar Ban Serep (Golden Rule #1: Steer izinkan R0 & R1 + Warning R1!)
   const handleQuickSwapSpare = () => {
     if (!selectedSlot || !selectedSlot.tire) {
       return;
@@ -66,19 +94,31 @@ export function useDigitalTwin({
       return;
     }
 
+    const r1SteerWarning =
+      isSteer && spareTire && spareTire.retreadStatus === "R1"
+        ? "\n\n⚠️ PERINGATAN STEER (R1): Ban serep S1 adalah ban 1x vulkanisir (R1). Memasang ban vulkanisir di Steer depan memerlukan pengawasan ekstra dan disarankan segera diganti ban baru (R0)."
+        : "";
+
     if (
       window.confirm(
-        `Konfirmasi Emergency Roadside Swap:\nTukar posisi ban ${selectedSlot.position} (${selectedSlot.tire.serialNumber}) dengan Ban Serep S1 (${spareTire ? spareTire.serialNumber : "Kosong"})?`,
+        `Konfirmasi Emergency Roadside Swap:\nTukar posisi ban ${selectedSlot.position} (${selectedSlot.tire.serialNumber}) dengan Ban Serep S1 (${spareTire ? spareTire.serialNumber : "Kosong"})?${r1SteerWarning}`,
       )
     ) {
       onEmergencySwapSpare(selectedSlot.position);
     }
   };
 
-  // Handler Konfirmasi Toleransi Mekanik
+  // Handler Konfirmasi Toleransi Mekanik (Wajib Bukti Foto)
   const handleConfirmOverride = (e: FormEvent) => {
     e.preventDefault();
     if (!selectedSlot) {
+      return;
+    }
+
+    if (!overridePhotoUrl) {
+      setOverrideError(
+        "Bukti foto kondisi fisik ban wajib dilampirkan untuk menyetujui toleransi +5.000 KM!",
+      );
       return;
     }
 
@@ -86,7 +126,10 @@ export function useDigitalTwin({
       selectedSlot.position,
       mechanicName,
       overrideReason,
+      overridePhotoUrl,
     );
+    setOverridePhotoUrl(null);
+    setOverrideError(null);
     setIsOverrideModalOpen(false);
   };
 
@@ -136,6 +179,11 @@ export function useDigitalTwin({
     setMechanicName,
     overrideReason,
     setOverrideReason,
+    overridePhotoUrl,
+    overrideError,
+    handleOverridePhotoCapture,
+    handleDeleteOverridePhoto,
+    handleOpenOverrideModal,
     spareViolationMsg,
     setSpareViolationMsg,
     spareTire,

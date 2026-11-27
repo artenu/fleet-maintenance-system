@@ -82,6 +82,23 @@ export default function TireConditionFormCard({
         </div>
       )}
 
+      {/* Validasi Peringatan Ban Vulkanisir 1x (R1) di Steer Depan */}
+      {isSteer && currentTireForm.retreadStatus === "R1" && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-amber-950 text-xs">
+          <ShieldAlert size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <strong className="font-bold block">
+              Peringatan Validasi Steer Depan (Ban Vulkanisir 1x / R1)
+            </strong>
+            <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+              Posisi Steer depan ({activeSlot}) terpasang ban 1x vulkanisir
+              (R1). Pastikan kondisi fisik & tekanan angin dipantau ekstra ketat
+              atau prioritaskan Ban Baru (R0).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 7 Parameter Input */}
       <Grid cols={1} mdCols={2} lgCols={3} gap="md">
         {/* 1. NO. SERI BAN */}

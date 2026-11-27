@@ -37,7 +37,7 @@ export default function WheelItem({
       onClick={() => onSlotClick(slot)}
       className={`group relative flex flex-col justify-between p-2 rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-md hover:scale-[1.02] ${bgStyle} ${
         isSelected ? "ring-2 ring-blue-600 border-blue-500 shadow-md" : ""
-      } min-w-[100px] sm:min-w-[115px] h-[105px]`}>
+      } min-w-[100px] sm:min-w-[115px] min-h-[114px]`}>
       {/* Header Slot: Posisi & Badge Casing */}
       <div className="flex items-center justify-between gap-1">
         <div className="flex items-center gap-1">
@@ -85,6 +85,9 @@ export default function WheelItem({
               {slot.tire.lastInspectionPercent}%
             </span>
           </div>
+          <p className="text-[8px] text-slate-500 font-medium truncate mt-0.5">
+            Inspeksi: {slot.tire.lastInspectionDate || "-"}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center my-auto text-slate-400">

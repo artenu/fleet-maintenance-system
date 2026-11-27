@@ -37,7 +37,7 @@ export default function SelectedWheelDetailCard({
       {selectedSlot ? (
         <div className="space-y-4 text-xs">
           {/* Header slot roda & peringatan toleransi/aturan */}
-          <WheelSlotHeader slot={selectedSlot} />
+          <WheelSlotHeader slot={selectedSlot} onPreviewPhoto={onPreviewPhoto} />
 
           {/* Data fisik & foto bukti ban terpasang ATAU Banner Pasang Ban di Slot Kosong */}
           {selectedSlot.tire ? (

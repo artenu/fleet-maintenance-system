@@ -1,7 +1,7 @@
 // src/components/vehicleInspection/InspectionHeaderCard.tsx
 import { Truck, UserCheck, Database } from "lucide-react";
 import { Card, Badge } from "@/components/common";
-import { FormInput, NumberInput, Select, DateInput } from "@/components/forms";
+import { FormInput, NumberInput, Select } from "@/components/forms";
 import { DEFAULT_INSPECTION_LOCATIONS } from "@/constants/vehicleInspection";
 import type { VehicleInspectionHeader } from "@/types/VehicleInspection";
 import type { ChassisType } from "@/types/TireManagement/tires";
@@ -145,21 +145,25 @@ export default function InspectionHeaderCard({
           disabled
         />
 
-        {/* 9. Petugas Mekanik / Surveyor (Auto-Auth & Disabled) */}
+        {/* 10. Jam / Waktu Inspeksi (Input Surveyor) */}
         <FormInput
-          label="Petugas Pemeriksa (Mekanik = Surveyor)"
-          value={`${header.inspectorName} (${header.inspectorNik})`}
-          disabled
-          helperText="Role gabungan: Mekanik merangkap Surveyor"
+          label="Waktu / Jam Inspeksi"
+          value={header.inspectionTime || ""}
+          onChange={(e) => onChangeHeader({ inspectionTime: e.target.value })}
+          placeholder="Contoh: 09:30 WIB"
+          helperText="Jam pelaksanaan inspeksi unit"
+          required
         />
 
-        {/* 10. Tanggal Pemeriksaan */}
-        <DateInput
-          label="Tanggal Pemeriksaan"
-          value={header.inspectionDate}
-          onChange={(e) => onChangeHeader({ inspectionDate: e.target.value })}
-          disabled
-        />
+        {/* 11. Petugas Mekanik / Surveyor (Auto-Auth & Disabled) */}
+        <div className="sm:col-span-2 md:col-span-4">
+          <FormInput
+            label="Petugas Pemeriksa (Mekanik = Surveyor)"
+            value={`${header.inspectorName} (${header.inspectorNik})`}
+            disabled
+            helperText="Role gabungan: Mekanik merangkap Surveyor yang mengesahkan BAP"
+          />
+        </div>
       </div>
     </Card>
   );

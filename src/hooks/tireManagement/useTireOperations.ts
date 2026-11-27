@@ -182,6 +182,7 @@ export function useTireOperations({
     position: WheelPosition,
     mechanicName: string,
     reason: string,
+    overridePhotoUrl?: string,
   ) => {
     const result = applyMechanicOverride(
       truckList,
@@ -189,6 +190,7 @@ export function useTireOperations({
       position,
       mechanicName,
       reason,
+      overridePhotoUrl,
     );
     setTruckList(result.updatedTruckList);
 

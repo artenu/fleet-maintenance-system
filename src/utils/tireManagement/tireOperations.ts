@@ -6,7 +6,11 @@ import type {
 } from "@/types/TireManagement/tires";
 import type { RotationResultPayload } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 import { getAuditSequence } from "@/constants/digitalTwin";
-import { evaluateWheelSlot } from "@/utils/tireManagement/tireCalculations";
+import {
+  evaluateWheelSlot,
+  addYearsToDateString,
+} from "@/utils/tireManagement/tireCalculations";
+import { TIRE_THRESHOLDS } from "@/constants/truck/tireRules";
 
 /**
  * Mengupdate data inspeksi ban dan odometer pada armada aktif
@@ -93,12 +97,21 @@ export function executeTireRotation(
     payload.warehouseTireToInstall
   ) {
     const warehouseTire = payload.warehouseTireToInstall;
+    const todayStr = new Date().toISOString().split("T")[0];
     const newTireForTruck: TireAsset = {
       ...warehouseTire,
       currentVehicleId: activeTruckId,
       currentPosition: payload.sourcePosition,
       installOdometer: payload.odometer,
-      lastInspectionDate: new Date().toISOString().split("T")[0],
+      installDate: todayStr,
+      expiryDate:
+        warehouseTire.retreadStatus === "R0"
+          ? addYearsToDateString(
+              todayStr,
+              TIRE_THRESHOLDS.NEW_TIRE_USAGE_EXPIRY_YEARS,
+            )
+          : warehouseTire.expiryDate,
+      lastInspectionDate: todayStr,
     };
     const tireMovedToWarehouse: TireAsset = {
       ...payload.sourceTire,
@@ -193,6 +206,7 @@ export function applyMechanicOverride(
   position: WheelPosition,
   mechanicName: string,
   reason: string,
+  overridePhotoUrl?: string,
 ): {
   updatedTruckList: TruckFleetTireItem[];
   updatedTire: TireAsset | null;
@@ -210,6 +224,7 @@ export function applyMechanicOverride(
           isMechanicOverridden: true,
           overrideReason: reason,
           overrideApprovedBy: mechanicName,
+          overridePhotoUrl: overridePhotoUrl || t.overridePhotoUrl,
         };
         updatedTireRef = overridden;
         return overridden;

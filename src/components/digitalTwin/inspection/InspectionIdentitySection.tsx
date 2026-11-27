@@ -1,6 +1,6 @@
 // src/components/digitalTwin/inspection/InspectionIdentitySection.tsx
 import { Sparkles } from "lucide-react";
-import { FormInput, Select } from "@/components/forms";
+import { FormInput, Select, DateInput } from "@/components/forms";
 import {
   STANDARD_BRANDS,
   INSPECTION_RETREAD_STATUS_OPTIONS,
@@ -9,7 +9,7 @@ import type { RetreadStatus } from "@/types/TireManagement/tires";
 import type { InspectionIdentitySectionProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
 
 /**
- * Bagian 1: Identitas Aset Ban & Casing Vulkanisir
+ * Bagian 1: Identitas Aset Ban, Casing Vulkanisir & Tanggal Inspeksi
  */
 export default function InspectionIdentitySection({
   serialNumber,
@@ -20,8 +20,25 @@ export default function InspectionIdentitySection({
   onChangeCustomBrand,
   retreadStatus,
   onChangeRetreadStatus,
+  inspectionDate,
+  onChangeInspectionDate,
   isSteer,
+  isAfkirMandatory = false,
+  totalPunctures = 0,
 }: InspectionIdentitySectionProps) {
+  const retreadOptions = INSPECTION_RETREAD_STATUS_OPTIONS.map((opt) => {
+    const isRetreadOption =
+      opt.value === "R1" || opt.value === "R2" || opt.value === "R3";
+    return {
+      ...opt,
+      disabled: Boolean(isAfkirMandatory && isRetreadOption),
+      label:
+        isAfkirMandatory && isRetreadOption
+          ? `${opt.label} (Terkunci: ≥3x Bocor)`
+          : opt.label,
+    };
+  });
+
   return (
     <div className="rounded-xl border border-slate-200 p-3.5 space-y-3 bg-slate-50/40">
       <h3 className="font-black text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -29,7 +46,7 @@ export default function InspectionIdentitySection({
         1. Verifikasi Identitas Aset Ban (Cegah Penukaran Liar)
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <FormInput
           label="Nomor Seri Ban (DOT / Serial)"
           placeholder="Contoh: BS-991204"
@@ -63,12 +80,27 @@ export default function InspectionIdentitySection({
           onChange={(e) =>
             onChangeRetreadStatus(e.target.value as RetreadStatus)
           }
-          options={INSPECTION_RETREAD_STATUS_OPTIONS}
-          helperText={
-            isSteer
-              ? "Steer diizinkan R0 atau R1"
-              : "Maksimal 3x Vulkanisir (R3)"
+          options={retreadOptions}
+          error={
+            isAfkirMandatory && retreadStatus !== "AFKIR"
+              ? `Sudah ${totalPunctures}x bocor — tidak bisa retread, wajib status AFKIR!`
+              : undefined
           }
+          helperText={
+            isAfkirMandatory
+              ? "Terkunci: ban ≥3x bocor tidak dapat di-retread (wajib AFKIR)"
+              : isSteer
+                ? "Steer diizinkan R0 atau R1 (R1 memicu peringatan)"
+                : "Maksimal 3x Vulkanisir (R3)"
+          }
+          required
+        />
+
+        <DateInput
+          label="Tanggal Inspeksi Unit Ban"
+          value={inspectionDate}
+          onChange={(e) => onChangeInspectionDate(e.target.value)}
+          helperText="Tercatat pada kartu Digital Twin"
           required
         />
       </div>

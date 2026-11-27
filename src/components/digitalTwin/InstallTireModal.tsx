@@ -10,6 +10,11 @@ import {
 } from "lucide-react";
 import { Modal, Button, Badge } from "@/components/common";
 import { Select } from "@/components/forms";
+import { TIRE_THRESHOLDS } from "@/constants/truck/tireRules";
+import {
+  addYearsToDateString,
+  getTotalPunctureCount,
+} from "@/utils/tireManagement/tireCalculations";
 import type {
   WheelSlotEvaluation,
   TireAsset,
@@ -117,18 +122,33 @@ export default function InstallTireModal({
     });
   }
 
-  // Validasi Golden Rule #1: Steer (H1 & H2) wajib R0 atau R1
+  // Validasi Golden Rule #1: Steer (H1 & H2) wajib R0 atau R1 (R1 beri warning khusus!)
   const isSteerSlot = slot.position === "H1" || slot.position === "H2";
   const isSteerViolation =
     isSteerSlot &&
     selectedCandidateTire &&
     selectedCandidateTire.retreadStatus !== "R0" &&
     selectedCandidateTire.retreadStatus !== "R1";
+  const isSteerR1Warning =
+    isSteerSlot &&
+    selectedCandidateTire &&
+    selectedCandidateTire.retreadStatus === "R1";
+  const isCandidateAfkirOrOverPunctured =
+    selectedCandidateTire &&
+    (selectedCandidateTire.retreadStatus === "AFKIR" ||
+      getTotalPunctureCount(selectedCandidateTire) >=
+        TIRE_THRESHOLDS.MAX_PUNCTURE_BEFORE_AFKIR);
 
   const handleSave = () => {
-    if (!selectedCandidateTire || isSteerViolation) {
+    if (
+      !selectedCandidateTire ||
+      isSteerViolation ||
+      isCandidateAfkirOrOverPunctured
+    ) {
       return;
     }
+
+    const todayStr = new Date().toISOString().split("T")[0];
 
     if (sourceType === "WAREHOUSE") {
       const finalTire: TireAsset = {
@@ -136,7 +156,15 @@ export default function InstallTireModal({
         currentVehicleId: truckUnitCode,
         currentPosition: slot.position,
         installOdometer: currentOdometer,
-        lastInspectionDate: new Date().toISOString().split("T")[0],
+        installDate: todayStr,
+        expiryDate:
+          selectedCandidateTire.retreadStatus === "R0"
+            ? addYearsToDateString(
+                todayStr,
+                TIRE_THRESHOLDS.NEW_TIRE_USAGE_EXPIRY_YEARS,
+              )
+            : selectedCandidateTire.expiryDate,
+        lastInspectionDate: todayStr,
       };
       onConfirmInstall(slot.position, finalTire);
     } else if (sourceType === "INTERNAL_SLOT") {
@@ -156,7 +184,10 @@ export default function InstallTireModal({
     onClose();
   };
 
-  const isSubmitDisabled = !selectedCandidateTire || Boolean(isSteerViolation);
+  const isSubmitDisabled =
+    !selectedCandidateTire ||
+    Boolean(isSteerViolation) ||
+    Boolean(isCandidateAfkirOrOverPunctured);
 
   return (
     <Modal
@@ -395,6 +426,30 @@ export default function InstallTireModal({
                 <span>
                   Pelanggaran Golden Rule: Gandar Kemudi (Steer {slot.position})
                   hanya boleh ban Baru (R0) atau 1x Vulkanisir (R1)!
+                </span>
+              </div>
+            )}
+
+            {/* Validasi & Peringatan Khusus: Ban R1 (1x Vulkanisir) dipasang di Steer Depan */}
+            {isSteerR1Warning && !isSteerViolation && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-[11px] font-bold">
+                <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  Peringatan Validasi Steer ({slot.position}): Ban ini sudah 1x
+                  vulkanisir (R1). Memasang ban vulkanisir di kemudi depan head
+                  truck berisiko lebih tinggi — pastikan kondisi karkas prima atau
+                  utamakan Ban Baru (R0).
+                </span>
+              </div>
+            )}
+
+            {/* Blokir jika ban berstatus AFKIR atau >= 3x Bocor */}
+            {isCandidateAfkirOrOverPunctured && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-bold">
+                <ShieldAlert size={16} className="text-rose-600 shrink-0" />
+                <span>
+                  DILARANG PASANG: Ban ini berstatus AFKIR atau sudah bocor/tambal
+                  ≥ 3x dan tidak layak beroperasi di armada!
                 </span>
               </div>
             )}

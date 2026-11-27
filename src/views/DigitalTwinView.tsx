@@ -51,6 +51,11 @@ export default function DigitalTwinView({
     setMechanicName,
     overrideReason,
     setOverrideReason,
+    overridePhotoUrl,
+    overrideError,
+    handleOverridePhotoCapture,
+    handleDeleteOverridePhoto,
+    handleOpenOverrideModal,
     spareViolationMsg,
     setSpareViolationMsg,
     handleQuickSwapSpare,
@@ -287,7 +292,7 @@ export default function DigitalTwinView({
           onOpenInspection={onOpenInspection}
           onOpenRotation={onOpenRotation}
           onQuickSwapSpare={handleQuickSwapSpare}
-          onOpenOverrideModal={() => setIsOverrideModalOpen(true)}
+          onOpenOverrideModal={handleOpenOverrideModal}
           onPreviewPhoto={setPreviewImage}
           onOpenInstallTire={() => setIsInstallModalOpen(true)}
         />
@@ -301,6 +306,10 @@ export default function DigitalTwinView({
         onChangeMechanicName={setMechanicName}
         overrideReason={overrideReason}
         onChangeOverrideReason={setOverrideReason}
+        overridePhotoUrl={overridePhotoUrl}
+        onOverridePhotoCapture={handleOverridePhotoCapture}
+        onDeleteOverridePhoto={handleDeleteOverridePhoto}
+        overrideError={overrideError}
         onSubmit={handleConfirmOverride}
       />
 

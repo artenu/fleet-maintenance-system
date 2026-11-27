@@ -49,6 +49,10 @@ export const TIRE_THRESHOLDS = {
   WARNING_KM_PERCENT: 80,
   CRITICAL_KM_PERCENT: 100,
   MECHANIC_OVERRIDE_KM: 5000, // GOLDEN RULE #4 (Edge Case 4): Toleransi mekanik +5.000 KM
+  MAX_PUNCTURE_BEFORE_AFKIR: 3, // Batas bocor/tambal maksimal sebelum wajib Afkir (tidak bisa retread)
+  NEW_TIRE_USAGE_EXPIRY_YEARS: 1, // Ban baru yang dipakai memiliki masa expired 1 tahun
+  WAREHOUSE_UNUSED_EXPIRY_YEARS: 5, // Ban baru di dalam gudang & tidak terpakai masa expired 5 tahun
+  EXPIRY_WARNING_DAYS: 30, // Peringatan H-30 sebelum ban kedaluwarsa
 };
 
 /**

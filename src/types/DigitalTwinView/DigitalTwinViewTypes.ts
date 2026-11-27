@@ -6,6 +6,8 @@ import type {
   TireAsset,
   ChassisType,
   RetreadStatus,
+  RetreadCycleKey,
+  TirePunctureByCycle,
   ActionRecommendation,
   ChassisTrailerAsset,
 } from "@/types/TireManagement/tires";
@@ -29,6 +31,7 @@ export interface DigitalTwinViewProps {
     position: WheelPosition,
     mechanicName: string,
     reason: string,
+    overridePhotoUrl?: string,
   ) => void;
   onSaveTruckTires?: (updatedTruck: TruckFleetTireItem) => void;
   onInstallTire?: (position: WheelPosition, newTire: TireAsset) => void;
@@ -100,6 +103,7 @@ export interface DigitalTwinViewProps {
     position: WheelPosition,
     mechanicName: string,
     reason: string,
+    overridePhotoUrl?: string,
   ) => void;
   onInstallTire?: (position: WheelPosition, newTire: TireAsset) => void; // 👈 Tambahkan ini
 }
@@ -117,6 +121,7 @@ export interface UseDigitalTwinProps {
     position: WheelPosition,
     mechanicName: string,
     reason: string,
+    overridePhotoUrl?: string,
   ) => void;
 }
 
@@ -330,6 +335,10 @@ export interface MechanicOverrideModalProps {
   onChangeMechanicName: (name: string) => void;
   overrideReason: string;
   onChangeOverrideReason: (reason: string) => void;
+  overridePhotoUrl: string | null;
+  onOverridePhotoCapture: (e: ChangeEvent<HTMLInputElement>) => void;
+  onDeleteOverridePhoto: () => void;
+  overrideError?: string | null;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -342,7 +351,10 @@ export interface InspectionStatusHeaderProps {
   kmElapsed: number;
   pressurePsi: number;
   isSteerViolation: boolean;
+  isSteerRetreadWarning?: boolean;
   isPhysicalCritical: boolean;
+  isAfkirMandatory?: boolean;
+  totalPunctures?: number;
   position: WheelPosition;
   retreadStatus: RetreadStatus;
 }
@@ -359,7 +371,11 @@ export interface InspectionIdentitySectionProps {
   onChangeCustomBrand: (val: string) => void;
   retreadStatus: RetreadStatus;
   onChangeRetreadStatus: (val: RetreadStatus) => void;
+  inspectionDate: string;
+  onChangeInspectionDate: (val: string) => void;
   isSteer: boolean;
+  isAfkirMandatory?: boolean;
+  totalPunctures?: number;
 }
 
 /**
@@ -382,17 +398,21 @@ export interface InspectionMeasurementsSectionProps {
 export interface InspectionDamageSectionProps {
   visualDamages: string[];
   onToggleDamage: (damage: string) => void;
+  punctureByCycle: TirePunctureByCycle;
+  currentRetreadStatus: RetreadStatus;
+  onChangePunctureForCycle: (cycle: RetreadCycleKey, count: number) => void;
+  totalPunctures: number;
 }
 
 /**
  * Props untuk subkomponen InspectionPhotoSection
  */
 export interface InspectionPhotoSectionProps {
-  photoPreview: string | null;
+  photoPreviews: string[];
   onPhotoCapture: (e: ChangeEvent<HTMLInputElement>) => void;
-  onDeletePhoto: () => void;
-  onOpenFullPreview: () => void;
-  isFullPreviewOpen: boolean;
+  onDeletePhoto: (index: number) => void;
+  previewPhotoIndex: number | null;
+  onOpenFullPreview: (index: number) => void;
   onCloseFullPreview: () => void;
   serialNumber: string;
 }
@@ -451,6 +471,7 @@ export interface WarehouseReplaceSectionProps {
  */
 export interface WheelSlotHeaderProps {
   slot: WheelSlotEvaluation;
+  onPreviewPhoto?: (state: PhotoPreviewState) => void;
 }
 
 /**

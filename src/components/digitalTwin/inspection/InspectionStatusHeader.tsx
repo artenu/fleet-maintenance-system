@@ -12,7 +12,10 @@ export default function InspectionStatusHeader({
   kmElapsed,
   pressurePsi,
   isSteerViolation,
+  isSteerRetreadWarning = false,
   isPhysicalCritical,
+  isAfkirMandatory = false,
+  totalPunctures = 0,
   position,
   retreadStatus,
 }: InspectionStatusHeaderProps) {
@@ -73,7 +76,7 @@ export default function InspectionStatusHeader({
         </div>
       </div>
 
-      {/* Peringatan Pelanggaran Golden Rule #1 (Gandar Steer) */}
+      {/* Peringatan Pelanggaran Golden Rule #1 (Gandar Steer R2/R3/AFKIR) */}
       {isSteerViolation && (
         <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-rose-900 text-xs">
           <ShieldAlert size={18} className="text-rose-600 shrink-0 mt-0.5" />
@@ -85,6 +88,56 @@ export default function InspectionStatusHeader({
               Posisi Kemudi {position} dilarang menggunakan ban vulkanisir lanjut
               ({retreadStatus}). Gandar steer hanya diizinkan menggunakan Ban
               Baru (R0) atau maksimal 1x Vulkanisir (R1)!
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Peringatan Validasi Steer R1 (1x Vulkanisir dipasang di Steer depan head truck) */}
+      {isSteerRetreadWarning && !isSteerViolation && (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 text-xs">
+          <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <strong className="font-bold">
+              Peringatan Validasi Steer Depan (Ban Vulkanisir 1x / R1)
+            </strong>
+            <p className="text-[11px] mt-0.5 leading-relaxed">
+              Posisi kemudi depan ({position}) terpasang ban 1x vulkanisir
+              (R1). Pastikan kondisi karkas &amp; tekanan angin aman terkendali,
+              atau jadwalkan penggantian dengan Ban Baru (R0).
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Peringatan Batas Tambalan >= 3x Bocor (Tidak Bisa Retread / Wajib Afkir) */}
+      {isAfkirMandatory && (
+        <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-rose-900 text-xs">
+          <ShieldAlert size={18} className="text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <strong className="font-bold">
+              Batas Tambalan Terlampaui ({totalPunctures}x Bocor) • Wajib AFKIR!
+            </strong>
+            <p className="text-[11px] mt-0.5 leading-relaxed">
+              Ban ini telah mengalami {totalPunctures}x bocor/tambal selama masa
+              penggunaan (R0-R3). Sesuai SOP keselamatan, ban tidak boleh
+              divulkanisir/retread ulang dan harus segera di-AFKIRKAN.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Peringatan Tambalan 2x Bocor */}
+      {!isAfkirMandatory && totalPunctures === 2 && (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 text-xs">
+          <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <strong className="font-bold">
+              Peringatan Riwayat Tambalan (2x Bocor)
+            </strong>
+            <p className="text-[11px] mt-0.5 leading-relaxed">
+              Ban sudah ditambal 2 kali. Jika terjadi 1x kebocoran lagi (3x),
+              ban tidak bisa di-retread dan wajib di-AFKIRKAN.
             </p>
           </div>
         </div>

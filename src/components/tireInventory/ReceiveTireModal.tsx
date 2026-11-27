@@ -12,7 +12,8 @@ import type {
   ReceiveMode,
   ReceiveTireModalProps,
 } from "@/types/TireInventoryView/TireInventoryViewTypes";
-import { BRAND_PROFILES } from "@/constants/truck/tireRules";
+import { BRAND_PROFILES, TIRE_THRESHOLDS } from "@/constants/truck/tireRules";
+import { addYearsToDateString } from "@/utils/tireManagement/tireCalculations";
 import {
   TIRE_SIZE_OPTIONS,
   RETREAD_CASING_RECEIVE_OPTIONS,
@@ -55,6 +56,7 @@ export default function ReceiveTireModal({
       return;
     }
 
+    const todayStr = new Date().toISOString().split("T")[0];
     const newTire: TireAsset = {
       id: `WH-${Date.now().toString().slice(-4)}`,
       serialNumber: serialNumber.trim().toUpperCase(),
@@ -64,8 +66,13 @@ export default function ReceiveTireModal({
       currentVehicleId: null,
       currentPosition: "GUDANG",
       installOdometer: 0,
+      warehouseEntryDate: todayStr,
+      expiryDate: addYearsToDateString(
+        todayStr,
+        TIRE_THRESHOLDS.WAREHOUSE_UNUSED_EXPIRY_YEARS,
+      ),
       lastInspectionPercent: physicalPercent,
-      lastInspectionDate: new Date().toISOString().split("T")[0],
+      lastInspectionDate: todayStr,
     };
 
     onConfirmReceive(newTire);

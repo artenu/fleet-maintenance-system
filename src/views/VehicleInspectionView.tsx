@@ -4,6 +4,7 @@ import { Container } from "@/components/layout";
 import { Button, Badge } from "@/components/common";
 import { useVehicleInspection } from "@/hooks/useVehicleInspection";
 import { INSPECTION_TABS } from "@/constants/vehicleInspection/vehicleInspectionConstants";
+import { DateInput } from "@/components/forms";
 
 // 🧱 Komponen Sub-Seksi Form
 import {
@@ -104,8 +105,19 @@ export default function VehicleInspectionView({
           </div>
         </div>
 
-        {/* Action Button: Print BAP A4 */}
-        <div className="flex items-center gap-2">
+        {/* Action Button & Tanggal Inspeksi */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:w-56">
+            <DateInput
+              label="Tanggal Inspeksi Truk"
+              value={header.inspectionDate}
+              onChange={(e) => updateHeader({ inspectionDate: e.target.value })}
+              helperText="Waktu pelaksanaan inspeksi oleh surveyor"
+              className="py-1.5 text-xs"
+              required
+            />
+          </div>
+
           <Button
             type="button"
             variant="outline"

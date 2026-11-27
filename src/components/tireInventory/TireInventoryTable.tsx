@@ -19,6 +19,7 @@ import {
   TIRE_INVENTORY_FILTER_OPTIONS,
   getTireCasingBadge,
 } from "@/constants/tireInventory";
+import { calculateTireExpiryInfo } from "@/utils/tireManagement/tireCalculations";
 
 import { Filter, CheckCircle2, Warehouse, Clock, Lock } from "lucide-react";
 
@@ -134,9 +135,29 @@ export default function TireInventoryTable({
                   </span>
                 </TableCell>
                 <TableCell className="text-slate-500 font-medium">
-                  <div className="flex items-center gap-1 text-[11px]">
-                    <Clock size={11} className="text-slate-400" />
-                    <span>{t.lastInspectionDate || "-"}</span>
+                  <div className="space-y-0.5 text-[11px]">
+                    <div className="flex items-center gap-1">
+                      <Clock size={11} className="text-slate-400" />
+                      <span>{t.warehouseEntryDate || t.lastInspectionDate || "-"}</span>
+                    </div>
+                    {(() => {
+                      const exp = calculateTireExpiryInfo(t);
+                      if (!exp.expiryDate) {
+                        return null;
+                      }
+                      return (
+                        <span
+                          className={`block text-[10px] font-bold ${
+                            exp.isExpired
+                              ? "text-rose-600"
+                              : exp.isExpiringSoon
+                                ? "text-amber-600"
+                                : "text-slate-400"
+                          }`}>
+                          Exp (5 Thn): {exp.expiryDate}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </TableCell>
                 {canViewFinancials && (

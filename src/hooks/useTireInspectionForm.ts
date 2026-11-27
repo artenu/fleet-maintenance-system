@@ -3,6 +3,8 @@ import { useState } from "react";
 import type {
   TireAsset,
   RetreadStatus,
+  RetreadCycleKey,
+  TirePunctureByCycle,
   ActionRecommendation,
 } from "@/types/TireManagement/tires";
 import type { UseTireInspectionFormProps } from "@/types/DigitalTwinView/DigitalTwinViewTypes";
@@ -14,19 +16,47 @@ import {
   INSPECTION_THRESHOLDS,
 } from "@/constants/digitalTwin";
 import { formatDateOnly } from "@/utils/auditSchedule";
+import {
+  getTirePhotos,
+  getTotalPunctureCount,
+  addYearsToDateString,
+} from "@/utils/tireManagement/tireCalculations";
+import { TIRE_THRESHOLDS } from "@/constants/truck/tireRules";
 
 // Re-export untuk backward-compatibility
 export { STANDARD_BRANDS, VISUAL_DAMAGE_OPTIONS };
 
+function buildInitialPunctureByCycle(tire: TireAsset): TirePunctureByCycle {
+  if (tire.punctureByCycle) {
+    return {
+      R0: tire.punctureByCycle.R0 || 0,
+      R1: tire.punctureByCycle.R1 || 0,
+      R2: tire.punctureByCycle.R2 || 0,
+      R3: tire.punctureByCycle.R3 || 0,
+    };
+  }
+  const existingCount = tire.punctureCount || 0;
+  const cycleKey: RetreadCycleKey =
+    tire.retreadStatus === "AFKIR" ? "R3" : tire.retreadStatus;
+  return {
+    R0: cycleKey === "R0" ? existingCount : 0,
+    R1: cycleKey === "R1" ? existingCount : 0,
+    R2: cycleKey === "R2" ? existingCount : 0,
+    R3: cycleKey === "R3" ? existingCount : 0,
+  };
+}
+
 /**
- * Custom hook untuk mengelola state, perhitungan validasi teknis, dan foto bukti inspeksi ban lapangan
+ * Custom hook untuk mengelola state, perhitungan validasi teknis, multi-foto, & riwayat tambal ban lapangan
  */
 export function useTireInspectionForm({
   tire,
   axleType,
   currentOdometer,
 }: UseTireInspectionFormProps) {
-  const [isFullPreviewOpen, setIsFullPreviewOpen] = useState<boolean>(false);
+  const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | null>(
+    null,
+  );
   const isSteer = axleType === "steer";
   const initialPercent =
     tire.lastInspectionPercent || INSPECTION_THRESHOLDS.DEFAULT_INITIAL_PERCENT;
@@ -37,6 +67,9 @@ export function useTireInspectionForm({
   const [customBrand, setCustomBrand] = useState<string>("");
   const [retreadStatus, setRetreadStatus] = useState<RetreadStatus>(
     tire.retreadStatus,
+  );
+  const [inspectionDate, setInspectionDate] = useState<string>(
+    formatDateOnly(new Date()),
   );
   const [odometer, setOdometer] = useState<number>(currentOdometer);
   const [pressurePsi, setPressurePsi] = useState<number>(
@@ -50,6 +83,9 @@ export function useTireInspectionForm({
   const [visualDamages, setVisualDamages] = useState<string[]>(
     tire.visualDamages || [],
   );
+  const [punctureByCycle, setPunctureByCycle] = useState<TirePunctureByCycle>(
+    () => buildInitialPunctureByCycle(tire),
+  );
   const [actionRecommendation, setActionRecommendation] =
     useState<ActionRecommendation>(
       tire.actionRecommendation ||
@@ -58,8 +94,8 @@ export function useTireInspectionForm({
           : "KEEP"),
     );
   const [notes, setNotes] = useState<string>(tire.inspectionNotes || "");
-  const [photoPreview, setPhotoPreview] = useState<string | null>(
-    tire.photoEvidenceUrl || null,
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>(() =>
+    getTirePhotos(tire),
   );
 
   const surveyorBadge = `${mockCurrentSurveyor.name} (${mockCurrentSurveyor.nik})`;
@@ -71,17 +107,52 @@ export function useTireInspectionForm({
     );
   };
 
-  // Upload / Jepret Foto Bukti Lapangan
+  // Update jumlah tambal/bocor per siklus casing (R0, R1, R2, R3)
+  const handleChangePunctureForCycle = (
+    cycle: RetreadCycleKey,
+    count: number,
+  ) => {
+    const safeCount = Math.max(0, Number.isFinite(count) ? Math.floor(count) : 0);
+    setPunctureByCycle((prev) => {
+      const next = { ...prev, [cycle]: safeCount };
+      const nextTotal = getTotalPunctureCount({ punctureByCycle: next });
+      if (nextTotal >= INSPECTION_THRESHOLDS.MAX_PUNCTURE_BEFORE_AFKIR) {
+        setActionRecommendation("REPLACE_SERVICE");
+      }
+      return next;
+    });
+  };
+
+  // Upload / Jepret Beberapa Foto Bukti Lapangan
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) {
+      return;
+    }
+
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
+        if (typeof reader.result === "string") {
+          const resultUrl = reader.result;
+          setPhotoPreviews((prev) => [...prev, resultUrl]);
+        }
       };
       reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const handleDeletePhoto = (index: number) => {
+    setPhotoPreviews((prev) => prev.filter((_, idx) => idx !== index));
+    if (previewPhotoIndex === index) {
+      setPreviewPhotoIndex(null);
     }
   };
+
+  const totalPunctures = getTotalPunctureCount({ punctureByCycle });
+  const isAfkirMandatory =
+    totalPunctures >= INSPECTION_THRESHOLDS.MAX_PUNCTURE_BEFORE_AFKIR;
 
   const hasSevereDamage = checkHasSevereDamage(visualDamages);
 
@@ -90,14 +161,21 @@ export function useTireInspectionForm({
     physicalPercent < INSPECTION_THRESHOLDS.CRITICAL_PHYSICAL_PERCENT ||
     hasSevereDamage;
 
-  // Golden Rule #1: Steer wajib R0 atau R1
+  // Golden Rule #1: Steer wajib R0 atau R1 (R2/R3/AFKIR dilarang, R1 beri warning)
   const isSteerViolation =
     isSteer && retreadStatus !== "R0" && retreadStatus !== "R1";
+  const isSteerRetreadWarning = isSteer && retreadStatus === "R1";
 
   const liveStatus: "CRITICAL" | "WARNING" | "GOOD" =
-    isSteerViolation || isPhysicalCritical
+    isSteerViolation ||
+    isPhysicalCritical ||
+    isAfkirMandatory ||
+    retreadStatus === "AFKIR"
       ? "CRITICAL"
-      : physicalPercent < INSPECTION_THRESHOLDS.WARNING_PHYSICAL_PERCENT ||
+      : isSteerRetreadWarning ||
+          totalPunctures ===
+            INSPECTION_THRESHOLDS.MAX_PUNCTURE_BEFORE_AFKIR - 1 ||
+          physicalPercent < INSPECTION_THRESHOLDS.WARNING_PHYSICAL_PERCENT ||
           pressurePsi < INSPECTION_THRESHOLDS.MIN_PRESSURE_PSI ||
           pressurePsi > INSPECTION_THRESHOLDS.MAX_PRESSURE_PSI
         ? "WARNING"
@@ -106,25 +184,44 @@ export function useTireInspectionForm({
   const activeBrandName = brand === "Lainnya" ? customBrand || "Custom" : brand;
 
   // Susun payload hasil audit
-  const buildUpdatedTire = (): TireAsset => ({
-    ...tire,
-    serialNumber: serialNumber.trim() || tire.serialNumber,
-    brand: activeBrandName,
-    retreadStatus,
-    lastInspectionPercent: physicalPercent,
-    lastInspectionDate: formatDateOnly(new Date()),
-    treadDepthMm,
-    pressurePsi,
-    visualDamages,
-    inspectorName: surveyorBadge,
-    inspectionNotes: notes,
-    photoEvidenceUrl: photoPreview || undefined,
-    actionRecommendation,
-  });
+  const buildUpdatedTire = (): TireAsset => {
+    const resolvedInstallDate = tire.installDate || inspectionDate;
+    const resolvedExpiryDate =
+      retreadStatus === "R0"
+        ? tire.expiryDate ||
+          addYearsToDateString(
+            resolvedInstallDate,
+            TIRE_THRESHOLDS.NEW_TIRE_USAGE_EXPIRY_YEARS,
+          )
+        : tire.expiryDate;
+
+    return {
+      ...tire,
+      serialNumber: serialNumber.trim() || tire.serialNumber,
+      brand: activeBrandName,
+      retreadStatus,
+      installDate: resolvedInstallDate,
+      expiryDate: resolvedExpiryDate,
+      lastInspectionPercent: physicalPercent,
+      lastInspectionDate: inspectionDate,
+      treadDepthMm,
+      pressurePsi,
+      visualDamages,
+      punctureByCycle,
+      punctureCount: totalPunctures,
+      inspectorName: surveyorBadge,
+      inspectionNotes: notes,
+      photoEvidenceUrls: photoPreviews.length > 0 ? photoPreviews : undefined,
+      photoEvidenceUrl: photoPreviews[0] || undefined,
+      actionRecommendation: isAfkirMandatory
+        ? "REPLACE_SERVICE"
+        : actionRecommendation,
+    };
+  };
 
   return {
-    isFullPreviewOpen,
-    setIsFullPreviewOpen,
+    previewPhotoIndex,
+    setPreviewPhotoIndex,
     serialNumber,
     setSerialNumber,
     brand,
@@ -133,6 +230,8 @@ export function useTireInspectionForm({
     setCustomBrand,
     retreadStatus,
     setRetreadStatus,
+    inspectionDate,
+    setInspectionDate,
     odometer,
     setOdometer,
     pressurePsi,
@@ -143,16 +242,21 @@ export function useTireInspectionForm({
     setPhysicalPercent,
     visualDamages,
     toggleDamage,
+    punctureByCycle,
+    handleChangePunctureForCycle,
+    totalPunctures,
+    isAfkirMandatory,
     actionRecommendation,
     setActionRecommendation,
     notes,
     setNotes,
-    photoPreview,
-    setPhotoPreview,
+    photoPreviews,
     handlePhotoCapture,
+    handleDeletePhoto,
     hasSevereDamage,
     isPhysicalCritical,
     isSteerViolation,
+    isSteerRetreadWarning,
     liveStatus,
     surveyorBadge,
     buildUpdatedTire,

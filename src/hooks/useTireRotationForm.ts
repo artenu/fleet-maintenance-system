@@ -14,6 +14,9 @@ import {
   DEFAULT_ROTATION_MECHANIC_PIC,
 } from "@/constants/digitalTwin";
 
+import { TIRE_THRESHOLDS } from "@/constants/truck/tireRules";
+import { getTotalPunctureCount } from "@/utils/tireManagement/tireCalculations";
+
 // Re-export untuk backward-compatibility
 export {
   ROTATION_REASON_OPTIONS,
@@ -111,6 +114,13 @@ export function useTireRotationForm({
       ) {
         return `PELANGGARAN: Ban ${sourceTire.serialNumber} sudah berstatus R3 (Batas Maksimal Vulkanisir 3x). Ban tidak boleh divulkanisir lagi, wajib diafkirkan!`;
       }
+      const totalPunctures = getTotalPunctureCount(sourceTire);
+      if (
+        sourceDestination === "VULKANISIR" &&
+        totalPunctures >= TIRE_THRESHOLDS.MAX_PUNCTURE_BEFORE_AFKIR
+      ) {
+        return `PELANGGARAN: Ban ${sourceTire.serialNumber} sudah mengalami ${totalPunctures}x bocor/tambal (Batas maks. 3x). Ban tidak bisa di-retread dan wajib di-AFKIRKAN!`;
+      }
     }
     return null;
   }, [
@@ -121,6 +131,43 @@ export function useTireRotationForm({
     targetTire,
     selectedWarehouseTire,
     sourceDestination,
+  ]);
+
+  // Peringatan khusus (non-blokir) jika ban 1x vulkanisir (R1) dipasang di gandar Steer depan (H1/H2)
+  const steerWarning = useMemo(() => {
+    if (violationError) {
+      return null;
+    }
+    if (mode === "SWAP_POSITION") {
+      const isTargetSteer = targetPosition === "H1" || targetPosition === "H2";
+      if (isTargetSteer && sourceTire.retreadStatus === "R1") {
+        return `PERINGATAN STEER (R1): Ban ${sourceTire.serialNumber} sudah vulkanisir 1x (R1) dan akan dipindahkan ke gandar kemudi depan (${targetPosition}). Pastikan karkas sangat prima atau prioritaskan Ban Baru (R0).`;
+      }
+      const isSourceSteer =
+        sourceSlot.position === "H1" || sourceSlot.position === "H2";
+      if (isSourceSteer && targetTire && targetTire.retreadStatus === "R1") {
+        return `PERINGATAN STEER (R1): Ban ${targetTire.serialNumber} sudah vulkanisir 1x (R1) dan akan dipindahkan ke gandar kemudi depan (${sourceSlot.position}). Pastikan kondisi karkas aman atau prioritaskan Ban Baru (R0).`;
+      }
+    } else {
+      const isSourceSteer =
+        sourceSlot.position === "H1" || sourceSlot.position === "H2";
+      if (
+        isSourceSteer &&
+        selectedWarehouseTire &&
+        selectedWarehouseTire.retreadStatus === "R1"
+      ) {
+        return `PERINGATAN STEER (R1): Ban gudang ${selectedWarehouseTire.serialNumber} berstatus 1x vulkanisir (R1) dan akan dipasang di gandar kemudi depan (${sourceSlot.position}). Disarankan memakai Ban Baru (R0) untuk posisi Steer.`;
+      }
+    }
+    return null;
+  }, [
+    violationError,
+    mode,
+    targetPosition,
+    sourceTire,
+    sourceSlot.position,
+    targetTire,
+    selectedWarehouseTire,
   ]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -165,6 +212,7 @@ export function useTireRotationForm({
     mechanicPic,
     setMechanicPic,
     violationError,
+    steerWarning,
     handleSubmit,
   };
 }

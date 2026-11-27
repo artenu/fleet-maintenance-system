@@ -7,7 +7,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { Card, Badge, Button } from "@/components/common";
-import { FormInput, DateInput } from "@/components/forms";
+import { FormInput } from "@/components/forms";
 import { TOOL_DOC_STATUS_OPTIONS } from "@/constants/vehicleInspection";
 import type { ToolDocItem, ToolDocStatus } from "@/types/VehicleInspection";
 
@@ -18,14 +18,13 @@ import CheckmarkToggle from "./CheckMarkToggle";
 interface ToolsDocumentsSectionProps {
   toolDocs: ToolDocItem[];
   onUpdateStatus: (id: string, status: ToolDocStatus) => void;
-  onUpdateExpiry: (id: string, expiryDate: string) => void;
+  onUpdateExpiry?: (id: string, expiryDate: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
 }
 
 export default function ToolsDocumentSection({
   toolDocs,
   onUpdateStatus,
-  onUpdateExpiry,
   onUpdateNotes,
 }: ToolsDocumentsSectionProps) {
   const goodCount = toolDocs.filter((i) => i.status === "B").length;
@@ -83,20 +82,27 @@ export default function ToolsDocumentSection({
         )}
       </div>
 
-      {/* DAFTAR CHECKLIST BARIS TIPIS */}
+      {/* DAFTAR CHECKLIST BARIS TIPIS DENGAN KOLOM SEJAJAR */}
       <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white overflow-hidden shadow-2xs">
+        {/* Table Header Bar */}
+        <div className="hidden md:grid grid-cols-12 gap-3 px-3 py-2 bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <div className="col-span-5">Item Checklist / Dokumen</div>
+          <div className="col-span-3 text-center">Status Kondisi</div>
+          <div className="col-span-4">Catatan / Keterangan</div>
+        </div>
+
         {toolDocs.map((item, idx) => {
           const isGood = item.status === "B";
-          const isDoc = item.hasExpiryDate;
+          const isDoc = item.id.startsWith("doc-");
 
           return (
             <div
               key={item.id}
-              className={`p-2.5 px-3 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 transition-colors ${
+              className={`p-2.5 px-3 grid grid-cols-1 md:grid-cols-12 gap-3 md:items-center transition-colors ${
                 isGood ? "hover:bg-slate-50/80" : "bg-amber-50/40"
               }`}>
               {/* 1. Reusable Checkmark Toggle & Nama Item */}
-              <div className="flex items-center gap-2.5 min-w-[320px]">
+              <div className="md:col-span-5 flex items-center gap-2.5 min-w-0">
                 <CheckmarkToggle
                   isGood={isGood}
                   statusLabel={item.status}
@@ -125,32 +131,23 @@ export default function ToolsDocumentSection({
                 </div>
               </div>
 
-              {/* 2. Reusable StatusPillGroup + Reusable DateInput + Reusable FormInput */}
-              <div className="flex flex-1 items-center gap-2 min-w-0">
+              {/* 2. Reusable StatusPillGroup (Sejajar Kolom Tengah) */}
+              <div className="md:col-span-3 flex justify-start md:justify-center">
                 <StatusPillGroup
                   options={TOOL_DOC_STATUS_OPTIONS}
                   activeValue={item.status}
                   onChange={(val) => onUpdateStatus(item.id, val)}
                 />
+              </div>
 
-                {isDoc && (
-                  <div className="w-36 shrink-0">
-                    <DateInput
-                      value={item.expiryDate || ""}
-                      onChange={(e) => onUpdateExpiry(item.id, e.target.value)}
-                      className="py-1 px-2 text-[11px] rounded-lg"
-                    />
-                  </div>
-                )}
-
-                <div className="flex-1 min-w-[150px]">
-                  <FormInput
-                    value={item.notes || ""}
-                    onChange={(e) => onUpdateNotes(item.id, e.target.value)}
-                    placeholder="Catatan / keterangan..."
-                    className="py-1 px-2.5 text-xs rounded-lg font-medium"
-                  />
-                </div>
+              {/* 3. Reusable FormInput (Sejajar Kolom Kanan) */}
+              <div className="md:col-span-4">
+                <FormInput
+                  value={item.notes || ""}
+                  onChange={(e) => onUpdateNotes(item.id, e.target.value)}
+                  placeholder="Catatan / keterangan..."
+                  className="py-1 px-2.5 text-xs rounded-lg font-medium"
+                />
               </div>
             </div>
           );

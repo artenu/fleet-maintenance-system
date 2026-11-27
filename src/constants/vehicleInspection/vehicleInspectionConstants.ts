@@ -42,29 +42,29 @@ export const COMPONENT_CONDITION_OPTIONS: Array<{
  * Daftar 12 item Tools, Perlengkapan, dan Masa Berlaku Dokumen Legalitas (Seksi 1)
  */
 export const INITIAL_TOOL_DOC_ITEMS: ToolDocItem[] = [
-  { id: "doc-stnk", name: "STNK Asli", hasExpiryDate: true, status: "B" },
+  { id: "doc-stnk", name: "STNK Asli", hasExpiryDate: false, status: "B" },
   {
     id: "doc-kir-card",
     name: "Kartu Uji Berkala (KIR)",
-    hasExpiryDate: true,
+    hasExpiryDate: false,
     status: "B",
   },
   {
     id: "doc-kir-paper",
     name: "Kertas Hasil Uji KIR",
-    hasExpiryDate: true,
+    hasExpiryDate: false,
     status: "B",
   },
   {
     id: "doc-stid",
     name: "Kartu STID Pelabuhan (Tanjung Priok)",
-    hasExpiryDate: true,
+    hasExpiryDate: false,
     status: "B",
   },
   {
     id: "tool-apar",
     name: "Tabung Pemadam (APAR)",
-    hasExpiryDate: true,
+    hasExpiryDate: false,
     status: "B",
   },
   {
